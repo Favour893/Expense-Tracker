@@ -1,0 +1,96 @@
+export type CountryOption = {
+  code: string;
+  name: string;
+  currency: string;
+};
+
+export const COUNTRIES: CountryOption[] = [
+  { code: "AE", name: "United Arab Emirates", currency: "AED" },
+  { code: "AR", name: "Argentina", currency: "ARS" },
+  { code: "AU", name: "Australia", currency: "AUD" },
+  { code: "BD", name: "Bangladesh", currency: "BDT" },
+  { code: "BE", name: "Belgium", currency: "EUR" },
+  { code: "BR", name: "Brazil", currency: "BRL" },
+  { code: "CA", name: "Canada", currency: "CAD" },
+  { code: "CH", name: "Switzerland", currency: "CHF" },
+  { code: "CN", name: "China", currency: "CNY" },
+  { code: "DE", name: "Germany", currency: "EUR" },
+  { code: "DK", name: "Denmark", currency: "DKK" },
+  { code: "EG", name: "Egypt", currency: "EGP" },
+  { code: "ES", name: "Spain", currency: "EUR" },
+  { code: "ET", name: "Ethiopia", currency: "ETB" },
+  { code: "EU", name: "Eurozone", currency: "EUR" },
+  { code: "FR", name: "France", currency: "EUR" },
+  { code: "GB", name: "United Kingdom", currency: "GBP" },
+  { code: "GH", name: "Ghana", currency: "GHS" },
+  { code: "ID", name: "Indonesia", currency: "IDR" },
+  { code: "IE", name: "Ireland", currency: "EUR" },
+  { code: "IN", name: "India", currency: "INR" },
+  { code: "IT", name: "Italy", currency: "EUR" },
+  { code: "JP", name: "Japan", currency: "JPY" },
+  { code: "KE", name: "Kenya", currency: "KES" },
+  { code: "KR", name: "South Korea", currency: "KRW" },
+  { code: "MA", name: "Morocco", currency: "MAD" },
+  { code: "MX", name: "Mexico", currency: "MXN" },
+  { code: "MY", name: "Malaysia", currency: "MYR" },
+  { code: "NG", name: "Nigeria", currency: "NGN" },
+  { code: "NL", name: "Netherlands", currency: "EUR" },
+  { code: "NO", name: "Norway", currency: "NOK" },
+  { code: "PH", name: "Philippines", currency: "PHP" },
+  { code: "PK", name: "Pakistan", currency: "PKR" },
+  { code: "PL", name: "Poland", currency: "PLN" },
+  { code: "PT", name: "Portugal", currency: "EUR" },
+  { code: "SA", name: "Saudi Arabia", currency: "SAR" },
+  { code: "SE", name: "Sweden", currency: "SEK" },
+  { code: "TH", name: "Thailand", currency: "THB" },
+  { code: "TR", name: "Turkey", currency: "TRY" },
+  { code: "TZ", name: "Tanzania", currency: "TZS" },
+  { code: "UG", name: "Uganda", currency: "UGX" },
+  { code: "US", name: "United States", currency: "USD" },
+  { code: "VN", name: "Vietnam", currency: "VND" },
+  { code: "ZA", name: "South Africa", currency: "ZAR" }
+].sort((a, b) => a.name.localeCompare(b.name));
+
+export const CURRENCIES = [
+  "AED",
+  "ARS",
+  "AUD",
+  "BDT",
+  "BRL",
+  "CAD",
+  "CHF",
+  "CNY",
+  "DKK",
+  "EGP",
+  "ETB",
+  "EUR",
+  "GBP",
+  "GHS",
+  "IDR",
+  "INR",
+  "JPY",
+  "KES",
+  "KRW",
+  "MAD",
+  "MXN",
+  "MYR",
+  "NGN",
+  "NOK",
+  "PHP",
+  "PKR",
+  "PLN",
+  "SAR",
+  "SEK",
+  "THB",
+  "TRY",
+  "TZS",
+  "UGX",
+  "USD",
+  "VND",
+  "ZAR"
+];
+
+export function currencyFromCountry(code: string) {
+  return COUNTRIES.find((c) => c.code === code)?.currency ?? "USD";
+}
+
