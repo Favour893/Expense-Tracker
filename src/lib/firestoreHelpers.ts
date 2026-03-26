@@ -8,19 +8,24 @@ import {
 } from "firebase/firestore";
 
 export async function listDocs<T extends DocumentData>(
-  colPath: string[],
+  colPath: [string, ...string[]],
   constraints: QueryConstraint[] = []
 ) {
-  // colPath: e.g. ["users", uid, "categories"]
-  // This helper keeps repository code clean.
   const { db } = await import("./firebaseClient");
+
   const colRef = collection(db, ...colPath);
-  const q = constraints.length ? query(colRef, ...constraints) : colRef;
+
+  // Always use query()
+  const q = query(colRef, ...constraints);
+
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as T & { id: string }));
+
+  return snapshot.docs.map((d) => ({
+    id: d.id,
+    ...d.data()
+  } as T & { id: string }));
 }
 
 export function byField(field: string, op: "==", value: unknown) {
   return where(field, op, value);
 }
-
