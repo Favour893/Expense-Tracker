@@ -1,7 +1,9 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { deleteUser, onAuthStateChanged, signOut, type User } from "firebase/auth";
+import Link from "next/link";
+import { mdiDelete, mdiLogout } from "@mdi/js";
 import { usePathname, useRouter } from "next/navigation";
 import { collection, deleteDoc, doc, getDocs } from "firebase/firestore";
 
@@ -162,53 +164,136 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const showNav = pathname !== "/login";
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const avatarRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!dropdownOpen) return;
+
+    function closeOnOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      if (!avatarRef.current?.contains(target)) {
+        setDropdownOpen(false);
+      }
+    }
+
+    function closeOnEsc(event: KeyboardEvent) {
+      if (event.key === "Escape") setDropdownOpen(false);
+    }
+
+    window.addEventListener("mousedown", closeOnOutside);
+    window.addEventListener("keydown", closeOnEsc);
+
+    return () => {
+      window.removeEventListener("mousedown", closeOnOutside);
+      window.removeEventListener("keydown", closeOnEsc);
+    };
+  }, [dropdownOpen]);
+
+  const avatarLabel = user?.displayName || user?.email || "User";
+  const initials = avatarLabel
+    .split(" ")
+    .map((p) => p.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join("");
 
   return (
     <AuthContext.Provider value={value}>
       <div className="min-h-screen w-full overflow-x-hidden text-slate-800 dark:text-slate-100">
         {showNav ? (
-          <header className="border-b border-indigo-100 bg-white/70 backdrop-blur dark:border-white/10 dark:bg-slate-900/60">
-            <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3">
+          <header className="relative z-40 border-b border-indigo-100 bg-white/70 backdrop-blur dark:border-white/10 dark:bg-slate-900/60">
+            <div className="mx-auto grid w-full max-w-6xl items-center gap-4 px-4 py-3 md:grid-cols-[auto_1fr_auto]">
               <div className="flex items-center gap-2">
                 <CashLogo size={30} />
                 <div className="bg-gradient-to-r from-indigo-600 to-sky-500 bg-clip-text text-lg font-bold text-transparent">
                   Expense Tracker
                 </div>
               </div>
-              <div className="flex items-center gap-3 text-sm">
-                <button
-                  type="button"
-                  className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-indigo-700 hover:bg-indigo-100 dark:border-white/15 dark:bg-white/5 dark:text-slate-100 dark:hover:bg-white/10"
-                  onClick={() => value.toggleTheme()}
-                >
-                  {theme === "dark" ? "Light mode" : "Dark mode"}
-                </button>
-                <div className="hidden md:block text-slate-600 dark:text-slate-300">
-                  {user?.email ? `Signed in as ${profile?.firstName ? `${profile.firstName} ${profile.lastName} (${user.email})` : user.email}` : ""}
+
+              <nav className="flex justify-center">
+                <div className="flex flex-wrap items-center justify-center gap-8">
+                  <NavLink href="/categories" label="Categories" active={pathname === "/categories"} />
+                  <NavLink href="/entries" label="Entries" active={pathname === "/entries"} />
+                  <NavLink href="/reports" label="Reports" active={pathname === "/reports"} />
                 </div>
+              </nav>
+
+              <div className="relative inline-flex" ref={avatarRef}>
                 <button
                   type="button"
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 hover:bg-slate-50 dark:border-white/15 dark:bg-white/5 dark:hover:bg-white/10"
-                  onClick={() => value.signOutUser()}
-                  disabled={!user}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-sm shadow-sm hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-white/10 dark:bg-slate-700"
+                  onClick={() => setDropdownOpen((open) => !open)}
+                  aria-label="Open user menu"
+                  aria-expanded={dropdownOpen}
                 >
-                  Sign out
+                  {user?.photoURL ? (
+                    <img src={user.photoURL} alt={avatarLabel} className="h-9 w-9 rounded-full object-cover" />
+                  ) : (
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{initials}</span>
+                  )}
                 </button>
-                <button
-                  type="button"
-                  className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-rose-700 hover:bg-rose-100 disabled:opacity-60 dark:border-rose-400/40 dark:bg-rose-500/10 dark:text-rose-300 dark:hover:bg-rose-500/20"
-                  onClick={() => value.deleteAccount()}
-                  disabled={!user}
-                >
-                  Delete account
-                </button>
+
+                {dropdownOpen ? (
+                  <div className="absolute right-0 top-full z-[9999] mt-2 w-56 rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-white/10 dark:bg-slate-800">
+                    <div className="mb-2 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-300">Account</div>
+                    <div className="mb-3 text-sm text-slate-700 dark:text-slate-200 truncate">{user?.email}</div>
+
+                    <button
+                      type="button"
+                      className="mb-2 flex w-full items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:border-white/10 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                      onClick={() => {
+                        value.toggleTheme();
+                      }}
+                      aria-pressed={theme === "dark"}
+                    >
+                      <span>{theme === "dark" ? "Dark mode" : "Light mode"}</span>
+                      <span className="flex h-5 w-10 items-center rounded-full bg-slate-300 p-1 transition dark:bg-slate-600">
+                        <span className={`h-4 w-4 rounded-full bg-white shadow transition ${theme === "dark" ? "translate-x-5" : "translate-x-0"}`} />
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="mb-2 flex w-full items-center justify-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-2 py-2 text-sm text-sky-700 hover:bg-sky-100 dark:border-sky-400/30 dark:bg-slate-700 dark:text-sky-200 dark:hover:bg-slate-600"
+                      onClick={async () => {
+                        await value.signOutUser();
+                        setDropdownOpen(false);
+                      }}
+                    >
+                      <svg
+                        className="h-4 w-4"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path d={mdiLogout} />
+                      </svg>
+                      Sign out
+                    </button>
+                    <hr className="my-4 border-slate-200 dark:border-white/10" />
+                    <button
+                      type="button"
+                      className="w-full rounded-lg border border-rose-200 bg-rose-50 px-2 py-2 text-sm text-rose-700 hover:bg-rose-100 dark:border-rose-400/40 dark:bg-rose-500/10 dark:text-rose-300 dark:hover:bg-rose-500/20"
+                      onClick={async () => {
+                        await value.deleteAccount();
+                        setDropdownOpen(false);
+                      }}
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <svg
+                          className="h-4 w-4"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path d={mdiDelete} />
+                        </svg>
+                        Delete account
+                      </span>
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </div>
-            <nav className="mx-auto flex w-full max-w-6xl flex-wrap gap-2 px-4 pb-3">
-              <NavLink href="/categories" label="Categories" />
-              <NavLink href="/entries" label="Entries" />
-              <NavLink href="/reports" label="Reports" />
-            </nav>
           </header>
         ) : null}
         <main className="mx-auto w-full max-w-6xl px-4 py-6">{children}</main>
@@ -217,16 +302,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-function NavLink({ href, label }: { href: string; label: string }) {
-  const router = useRouter();
+function NavLink({ href, label, active }: { href: string; label: string; active?: boolean }) {
   return (
-    <button
-      type="button"
-      className="rounded-lg border border-slate-200 bg-white px-3 py-2 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
-      onClick={() => router.push(href)}
+    <Link
+      href={href}
+      className={`text-sm font-medium transition ${
+        active
+          ? "text-indigo-600 underline decoration-indigo-400 underline-offset-4 dark:text-indigo-300"
+          : "text-slate-700 hover:text-indigo-600 hover:underline dark:text-slate-200 dark:hover:text-indigo-300"
+      }`}
+      aria-current={active ? "page" : undefined}
     >
       {label}
-    </button>
+    </Link>
   );
 }
 
