@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import React, { useEffect, useState } from "react";
+import { createUserWithEmailAndPassword, GoogleAuthProvider, OAuthProvider, getRedirectResult, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect } from "firebase/auth";
+import { mdiApple, mdiGoogle } from "@mdi/js";
 import { auth } from "../../src/lib/firebaseClient";
 import { useRouter } from "next/navigation";
 import { COUNTRIES, CURRENCIES, currencyFromCountry } from "../../src/lib/constants/countries";
-import { saveProfile } from "../../src/lib/repos/profileRepo";
+import { saveProfile, saveUserDocument } from "../../src/lib/repos/profileRepo";
 import { CashLogo } from "../../src/components/branding/CashLogo";
 
 function isStrongPassword(password: string) {
@@ -32,7 +33,22 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const provider = new GoogleAuthProvider();
+  useEffect(() => {
+    async function handleRedirectResult() {
+      setBusy(true);
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user || auth.currentUser) {
+          router.push("/reports");
+        }
+      } catch (e: any) {
+        setError(e?.message || String(e));
+      } finally {
+        setBusy(false);
+      }
+    }
+    handleRedirectResult();
+  }, [router]);
 
   async function handleEmailPassword(mode: "signin" | "signup") {
     setBusy(true);
@@ -51,6 +67,12 @@ export default function LoginPage() {
           throw new Error("Use a stronger password: at least 8 chars with uppercase, lowercase, number, and punctuation.");
         }
         const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
+        await saveUserDocument(cred.user.uid, {
+          email: email.trim(),
+          displayName: `${firstName.trim()} ${lastName.trim()}`,
+          photoURL: null,
+          preferredCurrency: currency
+        });
         await saveProfile(cred.user.uid, {
           firstName: firstName.trim(),
           otherName: otherName.trim() || undefined,
@@ -69,17 +91,44 @@ export default function LoginPage() {
     }
   }
 
-  async function handleGoogle() {
+  async function signInWithProvider(provider: GoogleAuthProvider | OAuthProvider) {
     setBusy(true);
     setError(null);
+
     try {
       await signInWithPopup(auth, provider);
       router.push("/reports");
     } catch (e: any) {
+      const code = e?.code || "";
+      if (code === "auth/popup-blocked" || code === "auth/cancelled-popup-request") {
+        try {
+          await signInWithRedirect(auth, provider);
+          return;
+        } catch (redirectError: any) {
+          setError(redirectError?.message || String(redirectError));
+          return;
+        }
+      }
+
       setError(e?.message || String(e));
     } finally {
       setBusy(false);
     }
+  }
+
+  async function handleGoogle() {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" });
+    await signInWithProvider(provider);
+  }
+
+  async function handleApple() {
+    const provider = new OAuthProvider("apple.com");
+    provider.setCustomParameters({
+      locale: "en",
+      prompt: "select_account"
+    });
+    await signInWithProvider(provider);
   }
 
   return (
@@ -206,15 +255,28 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <div className="mt-2">
+        <div className="mt-2 grid gap-3">
           <button
-            className="et-btn-secondary w-full"
+            className="et-btn-secondary flex items-center justify-center gap-2 w-full"
             disabled={busy}
             onClick={handleGoogle}
           >
+            <svg className="h-5 w-5 text-red-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d={mdiGoogle} />
+            </svg>
             Continue with Google
           </button>
-          <p className="mt-3 text-xs text-slate-400">
+          <button
+            className="et-btn-secondary flex items-center justify-center gap-2 w-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-slate-300"
+            disabled={busy}
+            onClick={handleApple}
+          >
+            <svg className="h-5 w-5 text-white dark:text-slate-900" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d={mdiApple} />
+            </svg>
+            Continue with Apple
+          </button>
+          <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">
             By continuing, you agree to use your own data only. (MVP: no sharing/collaboration.)
           </p>
         </div>

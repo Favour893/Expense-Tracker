@@ -8,7 +8,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { collection, deleteDoc, doc, getDocs } from "firebase/firestore";
 
 import { auth, db } from "../../lib/firebaseClient";
-import { getProfile, type UserProfile } from "../../lib/repos/profileRepo";
+import { getProfile, getUserDocument, saveUserDocument, type UserProfile, type UserDocument } from "../../lib/repos/profileRepo";
 import { CashLogo } from "../branding/CashLogo";
 
 type AuthContextValue = {
@@ -26,6 +26,7 @@ const THEME_KEY = "expense-tracker-theme";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [userDoc, setUserDoc] = useState<UserDocument | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -93,10 +94,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
+        const existingUser = await getUserDocument(u.uid);
+        const preferredCurrency = existingUser?.preferredCurrency || "USD";
+        const photoURL = u.photoURL || existingUser?.photoURL || null;
+
+        await saveUserDocument(u.uid, {
+          email: u.email || "",
+          displayName: u.displayName || "",
+          photoURL,
+          preferredCurrency
+        });
+
         const p = await getProfile(u.uid);
         setProfile(p);
+        setUserDoc(await getUserDocument(u.uid));
       } else {
         setProfile(null);
+        setUserDoc(null);
       }
       setLoading(false);
     });
@@ -191,6 +205,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [dropdownOpen]);
 
   const avatarLabel = user?.displayName || user?.email || "User";
+  const avatarSrc = user?.photoURL || userDoc?.photoURL || null;
   const initials = avatarLabel
     .split(" ")
     .map((p) => p.charAt(0).toUpperCase())
@@ -226,8 +241,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   aria-label="Open user menu"
                   aria-expanded={dropdownOpen}
                 >
-                  {user?.photoURL ? (
-                    <img src={user.photoURL} alt={avatarLabel} className="h-9 w-9 rounded-full object-cover" />
+                  {avatarSrc ? (
+                    <img src={avatarSrc} alt={avatarLabel} className="h-9 w-9 rounded-full object-cover" />
                   ) : (
                     <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{initials}</span>
                   )}
