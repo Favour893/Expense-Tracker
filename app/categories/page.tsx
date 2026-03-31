@@ -200,7 +200,6 @@ function Categories() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="font-semibold">{c.name}</div>
-                      <div className="mt-1 text-xs text-slate-600 dark:text-slate-300">income</div>
                     </div>
                     <button
                       className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
@@ -231,7 +230,6 @@ function Categories() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="font-semibold">{c.name}</div>
-                      <div className="mt-1 text-xs text-slate-600 dark:text-slate-300">expense</div>
                     </div>
                     <button
                       className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
