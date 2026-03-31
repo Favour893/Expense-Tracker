@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -32,7 +33,7 @@ function Categories() {
     const q = searchText.trim().toLowerCase();
     if (!q) return categories;
     return categories.filter((c) => {
-      const joined = `${c.name} ${c.type}`.toLowerCase();
+      const joined = (c.name + " " + c.type).toLowerCase();
       return joined.includes(q);
     });
   }, [categories, searchText]);
@@ -100,107 +101,111 @@ function Categories() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="et-card flex flex-col min-h-0 overflow-hidden">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-semibold">Your categories</h2>
-          <button
-            type="button"
-            className="et-btn-secondary inline-flex items-center gap-2"
-            onClick={() => setShowAddCategoryModal(true)}
-          >
-            <span className="text-xl font-bold">+</span>
-            Add category
-          </button>
-        </div>
+            <h2 className="text-lg font-semibold">Your categories</h2>
+            <button
+              type="button"
+              className="et-btn-secondary inline-flex items-center gap-2"
+              onClick={() => setShowAddCategoryModal(true)}
+            >
+              <span className="text-xl font-bold">+</span>
+              Add category
+            </button>
+          </div>
 
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-          <input
-            className="h-11 flex-1 rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5"
-            placeholder="Search category name or type"
-            list="category-search-suggestions"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
-          <button
-            type="button"
-            className="h-11 min-w-24 rounded-xl border border-slate-200 bg-white px-4 font-semibold hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
-            onClick={() => setSearchText("")}
-          >
-            Clear
-          </button>
-        </div>
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+            <input
+              className="h-11 flex-1 rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5"
+              placeholder="Search category name or type"
+              list="category-search-suggestions"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+            <button
+              type="button"
+              className="h-11 min-w-24 rounded-xl border border-slate-200 bg-white px-4 font-semibold hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+              onClick={() => setSearchText("")}
+            >
+              Clear
+            </button>
+          </div>
 
-        <datalist id="category-search-suggestions">
-          {categorySuggestions.map((item) => (
-            <option key={item} value={item} />
-          ))}
-        </datalist>
+          <datalist id="category-search-suggestions">
+            {categorySuggestions.map((item) => (
+              <option key={item} value={item} />
+            ))}
+          </datalist>
 
-        <div className="mt-4 flex-1 min-h-0 overflow-y-auto">
-          {!categories.length ? (
-          <div className="mt-4 text-sm text-slate-600 dark:text-slate-300">No categories yet. Use the add button above to create one.</div>
-        ) : null}
+          <div className="mt-4 flex-1 min-h-0 overflow-y-auto">
+            {!categories.length ? (
+              <div className="mt-4 text-sm text-slate-600 dark:text-slate-300">
+                No categories yet. Use the add button above to create one.
+              </div>
+            ) : null}
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          <section className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/5">
-            <h3 className="text-base font-semibold text-emerald-700 dark:text-emerald-300">Income</h3>
-            <div className="mt-2 grid gap-3">
-              {incomeCategories.map((c) => (
-                <div key={c.id} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="font-semibold">{c.name}</div>
+            <div className="mt-4 grid gap-4 lg:grid-cols-2">
+              <section className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/5">
+                <h3 className="text-base font-semibold text-emerald-700 dark:text-emerald-300">Income</h3>
+                <div className="mt-2 grid gap-3">
+                  {incomeCategories.map((c) => (
+                    <div key={c.id} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="font-semibold">{c.name}</div>
+                        </div>
+                        <button
+                          type="button"
+                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                          onClick={async () => {
+                            if (!uid) return;
+                            const ok = confirm("Delete category \"" + c.name + "\"?");
+                            if (!ok) return;
+                            await deleteCategory(uid, c.id);
+                            await refresh();
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      type="button"
-                      className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
-                      onClick={async () => {
-                        if (!uid) return;
-                        const ok = confirm(`Delete category "${c.name}"?`);
-                        if (!ok) return;
-                        await deleteCategory(uid, c.id);
-                        await refresh();
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  ))}
+                  {!incomeCategories.length ? (
+                    <div className="text-sm text-slate-600 dark:text-slate-300">No income categories yet.</div>
+                  ) : null}
                 </div>
-              ))}
-              {!incomeCategories.length ? (
-                <div className="text-sm text-slate-600 dark:text-slate-300">No income categories yet.</div>
-              ) : null}
-            </div>
-          </section>
+              </section>
 
-          <section className="rounded-xl border border-rose-200 bg-rose-50/40 p-3 dark:border-rose-500/30 dark:bg-rose-500/5">
-            <h3 className="text-base font-semibold text-rose-700 dark:text-rose-300">Expense</h3>
-            <div className="mt-2 grid gap-3">
-              {expenseCategories.map((c) => (
-                <div key={c.id} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="font-semibold">{c.name}</div>
+              <section className="rounded-xl border border-rose-200 bg-rose-50/40 p-3 dark:border-rose-500/30 dark:bg-rose-500/5">
+                <h3 className="text-base font-semibold text-rose-700 dark:text-rose-300">Expense</h3>
+                <div className="mt-2 grid gap-3">
+                  {expenseCategories.map((c) => (
+                    <div key={c.id} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="font-semibold">{c.name}</div>
+                        </div>
+                        <button
+                          type="button"
+                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                          onClick={async () => {
+                            if (!uid) return;
+                            const ok = confirm("Delete category \"" + c.name + "\"?");
+                            if (!ok) return;
+                            await deleteCategory(uid, c.id);
+                            await refresh();
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      type="button"
-                      className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
-                      onClick={async () => {
-                        if (!uid) return;
-                        const ok = confirm(`Delete category "${c.name}"?`);
-                        if (!ok) return;
-                        await deleteCategory(uid, c.id);
-                        await refresh();
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  ))}
+                  {!expenseCategories.length ? (
+                    <div className="text-sm text-slate-600 dark:text-slate-300">No expense categories yet.</div>
+                  ) : null}
                 </div>
-              ))}
-              {!expenseCategories.length ? (
-                <div className="text-sm text-slate-600 dark:text-slate-300">No expense categories yet.</div>
-              ) : null}
+              </section>
             </div>
-          </section>
+          </div>
         </div>
       </div>
 
@@ -289,4 +294,3 @@ function Categories() {
     </div>
   );
 }
-

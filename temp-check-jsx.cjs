@@ -1,0 +1,15 @@
+const fs = require('fs');
+const s = fs.readFileSync('app/categories/page.tsx', 'utf8');
+const count = (needle) => s.split(needle).length - 1;
+console.log('div open', count('<div'), 'div close', count('</div>'));
+console.log('section open', count('<section'), 'section close', count('</section>'));
+console.log('form open', count('<form'), 'form close', count('</form>'));
+console.log('button open', count('<button'), 'button close', count('</button>'));
+console.log('datalist open', count('<datalist'), 'datalist close', count('</datalist>'));
+console.log('label open', count('<label'), 'label close', count('</label>'));
+console.log('input self', count('<input'));
+console.log('select open', count('<select'), 'select close', count('</select>'));
+console.log('option open', count('<option'), 'option close', count('</option>'));
+console.log('h2 open', count('<h2'), 'h2 close', count('</h2>'));
+console.log('h3 open', count('<h3'), 'h3 close', count('</h3>'));
+console.log('p open', count('<p'), 'p close', count('</p>'));
