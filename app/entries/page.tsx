@@ -212,7 +212,7 @@ function Entries() {
         <form className="mt-4 grid gap-4" onSubmit={onAdd}>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Category type</span>
+              <span className="text-sm text-slate-600 dark:text-slate-300">Category type <span className="text-red-500">*</span></span>
               <select
                 className="et-input"
                 value={entryType}
@@ -223,11 +223,11 @@ function Entries() {
               </select>
             </label>
             <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Date</span>
-              <input className="et-input" type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} />
+              <span className="text-sm text-slate-600 dark:text-slate-300">Date <span className="text-red-500">*</span></span>
+              <input className="et-input" type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} required />
             </label>
             <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Amount ({currency})</span>
+              <span className="text-sm text-slate-600 dark:text-slate-300">Amount ({currency}) <span className="text-red-500">*</span></span>
               <input
                 className="et-input"
                 type="text"
@@ -237,6 +237,7 @@ function Entries() {
                 onFocus={(e) => {
                   if (e.currentTarget.value === "0") e.currentTarget.select();
                 }}
+                required
                 onKeyDown={(e) => {
                   if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
                     e.stopPropagation();
@@ -249,13 +250,13 @@ function Entries() {
               />
             </label>
             <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Category item</span>
+              <span className="text-sm text-slate-600 dark:text-slate-300">Category item <span className="text-red-500">*</span></span>
               <select
                 className="et-input"
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
                 disabled={!typedCategories.length}
-              >
+                required>
                 {!typedCategories.length ? (
                   <option value="">No {entryType} categories yet</option>
                 ) : (

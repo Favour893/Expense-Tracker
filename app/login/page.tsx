@@ -159,19 +159,19 @@ export default function LoginPage() {
         {mode === "signup" ? (
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">First name</span>
-              <input className="et-input" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+              <span className="text-sm text-slate-600 dark:text-slate-300">First name <span className="text-red-500">*</span></span>
+              <input className="et-input" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
             </label>
             <label className="grid gap-2">
               <span className="text-sm text-slate-600 dark:text-slate-300">Other name (optional)</span>
               <input className="et-input" value={otherName} onChange={(e) => setOtherName(e.target.value)} />
             </label>
             <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Last name</span>
-              <input className="et-input" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+              <span className="text-sm text-slate-600 dark:text-slate-300">Last name <span className="text-red-500">*</span></span>
+              <input className="et-input" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
             </label>
             <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Country</span>
+              <span className="text-sm text-slate-600 dark:text-slate-300">Country <span className="text-red-500">*</span></span>
               <select
                 className="et-input"
                 value={country}
@@ -180,7 +180,7 @@ export default function LoginPage() {
                   setCountry(code);
                   setCurrency(currencyFromCountry(code));
                 }}
-              >
+                required>
                 <option value="">Select country</option>
                 {COUNTRIES.map((c) => (
                   <option key={c.code} value={c.code}>
@@ -190,12 +190,12 @@ export default function LoginPage() {
               </select>
             </label>
             <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">City</span>
-              <input className="et-input" value={city} onChange={(e) => setCity(e.target.value)} />
+              <span className="text-sm text-slate-600 dark:text-slate-300">City <span className="text-red-500">*</span></span>
+              <input className="et-input" value={city} onChange={(e) => setCity(e.target.value)} required />
             </label>
             <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Currency (auto from country, editable)</span>
-              <select className="et-input" value={currency} onChange={(e) => setCurrency(e.target.value)}>
+              <span className="text-sm text-slate-600 dark:text-slate-300">Currency (auto from country, editable) <span className="text-red-500">*</span></span>
+              <select className="et-input" value={currency} onChange={(e) => setCurrency(e.target.value)} required>
                 {CURRENCIES.map((c) => (
                   <option key={c} value={c}>
                     {c}
@@ -206,35 +206,38 @@ export default function LoginPage() {
           </div>
         ) : null}
         <label className="grid gap-2">
-          <span className="text-sm text-slate-600 dark:text-slate-300">Email</span>
+          <span className="text-sm text-slate-600 dark:text-slate-300">Email <span className="text-red-500">*</span></span>
           <input
             className="et-input"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
+            required
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm text-slate-600 dark:text-slate-300">Password</span>
+          <span className="text-sm text-slate-600 dark:text-slate-300">Password <span className="text-red-500">*</span></span>
           <input
             className="et-input"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
+            required
           />
         </label>
         {mode === "signup" ? (
           <>
             <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Confirm password</span>
+              <span className="text-sm text-slate-600 dark:text-slate-300">Confirm password <span className="text-red-500">*</span></span>
               <input
                 className="et-input"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 autoComplete="new-password"
+                required
               />
             </label>
             <p className="text-xs text-slate-500 dark:text-slate-400">

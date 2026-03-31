@@ -99,14 +99,14 @@ function Categories() {
         <form className="grid gap-4" onSubmit={onAdd}>
           <div className="grid gap-4 sm:grid-cols-3">
             <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Type</span>
-              <select className="et-input" value={type} onChange={(e) => setType(e.target.value as CategoryType)}>
+              <span className="text-sm text-slate-600 dark:text-slate-300">Type <span className="text-red-500">*</span></span>
+              <select className="et-input" value={type} onChange={(e) => setType(e.target.value as CategoryType)} required>
                 <option value="expense">Expense</option>
                 <option value="income">Income</option>
               </select>
             </label>
             <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Name</span>
+              <span className="text-sm text-slate-600 dark:text-slate-300">Name <span className="text-red-500">*</span></span>
               <input
                 className="et-input"
                 data-arrow-edit="true"
@@ -121,6 +121,7 @@ function Categories() {
                 }}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g., Groceries"
+                required
               />
             </label>
             <label className="grid gap-2">
