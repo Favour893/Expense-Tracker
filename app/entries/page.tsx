@@ -76,6 +76,7 @@ function Entries() {
   const [merchantOrPayee, setMerchantOrPayee] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [searchText, setSearchText] = useState<string>("");
+  const [showAddTransaction, setShowAddTransaction] = useState(true);
 
   const typedCategories = useMemo(
     () => categories.filter((c) => c.isActive !== false && c.type === entryType),
@@ -208,114 +209,132 @@ function Entries() {
       </div>
 
       <div className="et-card">
-        <h2 className="text-lg font-semibold">Add transaction</h2>
-        <form className="mt-4 grid gap-4" onSubmit={onAdd}>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Category type <span className="text-red-500">*</span></span>
-              <select
-                className="et-input"
-                value={entryType}
-                onChange={(e) => setEntryType(e.target.value as TransactionType)}
-              >
-                <option value="expense">Expense</option>
-                <option value="income">Income</option>
-              </select>
-            </label>
-            <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Date <span className="text-red-500">*</span></span>
-              <input className="et-input" type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} required />
-            </label>
-            <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Amount ({currency}) <span className="text-red-500">*</span></span>
-              <input
-                className="et-input"
-                type="text"
-                inputMode="decimal"
-                data-arrow-edit="true"
-                value={amount}
-                onFocus={(e) => {
-                  if (e.currentTarget.value === "0") e.currentTarget.select();
-                }}
-                required
-                onKeyDown={(e) => {
-                  if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
-                    e.stopPropagation();
-                  }
-                }}
-                onChange={(e) => {
-                  const next = e.target.value;
-                  if (next === "" || /^\d*([.]\d{0,2})?$/.test(next)) setAmount(next);
-                }}
-              />
-            </label>
-            <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Category item <span className="text-red-500">*</span></span>
-              <select
-                className="et-input"
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                disabled={!typedCategories.length}
-                required>
-                {!typedCategories.length ? (
-                  <option value="">No {entryType} categories yet</option>
-                ) : (
-                  <option value="">Select {entryType} category</option>
-                )}
-                {typedCategories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold">Add transaction</h2>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              {showAddTransaction ? "Enter a new expense or income item." : "Tap the plus icon to add a transaction."}
+            </p>
           </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Merchant / Payee</span>
-              <input
-                className="et-input"
-                data-arrow-edit="true"
-                value={merchantOrPayee}
-                onFocus={(e) => {
-                  if (e.currentTarget.value) e.currentTarget.select();
-                }}
-                onKeyDown={(e) => {
-                  if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
-                    e.stopPropagation();
-                  }
-                }}
-                onChange={(e) => setMerchantOrPayee(e.target.value)}
-                placeholder="e.g., Amazon"
-              />
-            </label>
-            <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Description</span>
-              <input
-                className="et-input"
-                data-arrow-edit="true"
-                value={description}
-                onFocus={(e) => {
-                  if (e.currentTarget.value) e.currentTarget.select();
-                }}
-                onKeyDown={(e) => {
-                  if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
-                    e.stopPropagation();
-                  }
-                }}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Optional note"
-              />
-            </label>
-          </div>
-
-          {error ? <div className="text-sm text-red-200">{error}</div> : null}
-
-          <button className="et-btn-primary" type="submit" disabled={busy || !selectedCategory}>
-            {busy ? "Saving..." : "Add entry"}
+          <button
+            type="button"
+            className="et-btn-secondary inline-flex items-center gap-2"
+            onClick={() => setShowAddTransaction((show) => !show)}
+          >
+            <span className="text-xl font-bold">+</span>
+            {showAddTransaction ? "Hide" : "Add"}
           </button>
-        </form>
+        </div>
+
+        {showAddTransaction ? (
+          <form className="mt-4 grid gap-4" onSubmit={onAdd}>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <label className="grid gap-2">
+                <span className="text-sm text-slate-600 dark:text-slate-300">Category type <span className="text-red-500">*</span></span>
+                <select
+                  className="et-input"
+                  value={entryType}
+                  onChange={(e) => setEntryType(e.target.value as TransactionType)}
+                >
+                  <option value="expense">Expense</option>
+                  <option value="income">Income</option>
+                </select>
+              </label>
+              <label className="grid gap-2">
+                <span className="text-sm text-slate-600 dark:text-slate-300">Date <span className="text-red-500">*</span></span>
+                <input className="et-input" type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} required />
+              </label>
+              <label className="grid gap-2">
+                <span className="text-sm text-slate-600 dark:text-slate-300">Amount ({currency}) <span className="text-red-500">*</span></span>
+                <input
+                  className="et-input"
+                  type="text"
+                  inputMode="decimal"
+                  data-arrow-edit="true"
+                  value={amount}
+                  onFocus={(e) => {
+                    if (e.currentTarget.value === "0") e.currentTarget.select();
+                  }}
+                  required
+                  onKeyDown={(e) => {
+                    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
+                      e.stopPropagation();
+                    }
+                  }}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    if (next === "" || /^\d*([.]\d{0,2})?$/.test(next)) setAmount(next);
+                  }}
+                />
+              </label>
+              <label className="grid gap-2">
+                <span className="text-sm text-slate-600 dark:text-slate-300">Category item <span className="text-red-500">*</span></span>
+                <select
+                  className="et-input"
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                  disabled={!typedCategories.length}
+                  required>
+                  {!typedCategories.length ? (
+                    <option value="">No {entryType} categories yet</option>
+                  ) : (
+                    <option value="">Select {entryType} category</option>
+                  )}
+                  {typedCategories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="grid gap-2">
+                <span className="text-sm text-slate-600 dark:text-slate-300">Merchant / Payee</span>
+                <input
+                  className="et-input"
+                  data-arrow-edit="true"
+                  value={merchantOrPayee}
+                  onFocus={(e) => {
+                    if (e.currentTarget.value) e.currentTarget.select();
+                  }}
+                  onKeyDown={(e) => {
+                    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
+                      e.stopPropagation();
+                    }
+                  }}
+                  onChange={(e) => setMerchantOrPayee(e.target.value)}
+                  placeholder="e.g., Amazon"
+                />
+              </label>
+              <label className="grid gap-2">
+                <span className="text-sm text-slate-600 dark:text-slate-300">Description</span>
+                <input
+                  className="et-input"
+                  data-arrow-edit="true"
+                  value={description}
+                  onFocus={(e) => {
+                    if (e.currentTarget.value) e.currentTarget.select();
+                  }}
+                  onKeyDown={(e) => {
+                    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
+                      e.stopPropagation();
+                    }
+                  }}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Optional note"
+                />
+              </label>
+            </div>
+
+            {error ? <div className="text-sm text-red-200">{error}</div> : null}
+
+            <button className="et-btn-primary" type="submit" disabled={busy || !selectedCategory}>
+              {busy ? "Saving..." : "Add entry"}
+            </button>
+          </form>
+        ) : null}
       </div>
 
       <div className="et-card">

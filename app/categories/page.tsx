@@ -26,6 +26,7 @@ function Categories() {
   const [type, setType] = useState<CategoryType>("expense");
   const [sortOrder, setSortOrder] = useState<string>("0");
   const [searchText, setSearchText] = useState("");
+  const [showAddCategory, setShowAddCategory] = useState(false);
 
   const filteredCategories = useMemo(() => {
     const q = searchText.trim().toLowerCase();
@@ -96,68 +97,87 @@ function Categories() {
       </div>
 
       <div className="et-card">
-        <form className="grid gap-4" onSubmit={onAdd}>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Type <span className="text-red-500">*</span></span>
-              <select className="et-input" value={type} onChange={(e) => setType(e.target.value as CategoryType)} required>
-                <option value="expense">Expense</option>
-                <option value="income">Income</option>
-              </select>
-            </label>
-            <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Name <span className="text-red-500">*</span></span>
-              <input
-                className="et-input"
-                data-arrow-edit="true"
-                value={name}
-                onFocus={(e) => {
-                  if (e.currentTarget.value) e.currentTarget.select();
-                }}
-                onKeyDown={(e) => {
-                  if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
-                    e.stopPropagation();
-                  }
-                }}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., Groceries"
-                required
-              />
-            </label>
-            <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Sort order</span>
-              <input
-                className="et-input"
-                type="text"
-                inputMode="numeric"
-                data-arrow-edit="true"
-                value={sortOrder}
-                onFocus={(e) => {
-                  if (e.currentTarget.value === "0") e.currentTarget.select();
-                }}
-                onKeyDown={(e) => {
-                  if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
-                    e.stopPropagation();
-                  }
-                }}
-                onChange={(e) => {
-                  const next = e.target.value;
-                  if (next === "" || /^-?\d+$/.test(next)) setSortOrder(next);
-                }}
-              />
-            </label>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold">Add category</h2>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              {showAddCategory ? "Fill in details to create a new category." : "Tap the plus icon to add a category."}
+            </p>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              className="et-btn-primary min-w-40"
-              disabled={busy || !name.trim()}
-            >
-              {busy ? "Adding..." : "Add category"}
-            </button>
-            {error ? <div className="text-sm text-red-200">{error}</div> : null}
-          </div>
-        </form>
+          <button
+            type="button"
+            className="et-btn-secondary inline-flex items-center gap-2"
+            onClick={() => setShowAddCategory((show) => !show)}
+          >
+            <span className="text-xl font-bold">+</span>
+            {showAddCategory ? "Hide" : "Add"}
+          </button>
+        </div>
+
+        {showAddCategory ? (
+          <form className="mt-4 grid gap-4" onSubmit={onAdd}>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <label className="grid gap-2">
+                <span className="text-sm text-slate-600 dark:text-slate-300">Type <span className="text-red-500">*</span></span>
+                <select className="et-input" value={type} onChange={(e) => setType(e.target.value as CategoryType)} required>
+                  <option value="expense">Expense</option>
+                  <option value="income">Income</option>
+                </select>
+              </label>
+              <label className="grid gap-2">
+                <span className="text-sm text-slate-600 dark:text-slate-300">Name <span className="text-red-500">*</span></span>
+                <input
+                  className="et-input"
+                  data-arrow-edit="true"
+                  value={name}
+                  onFocus={(e) => {
+                    if (e.currentTarget.value) e.currentTarget.select();
+                  }}
+                  onKeyDown={(e) => {
+                    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
+                      e.stopPropagation();
+                    }
+                  }}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g., Groceries"
+                  required
+                />
+              </label>
+              <label className="grid gap-2">
+                <span className="text-sm text-slate-600 dark:text-slate-300">Sort order</span>
+                <input
+                  className="et-input"
+                  type="text"
+                  inputMode="numeric"
+                  data-arrow-edit="true"
+                  value={sortOrder}
+                  onFocus={(e) => {
+                    if (e.currentTarget.value === "0") e.currentTarget.select();
+                  }}
+                  onKeyDown={(e) => {
+                    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
+                      e.stopPropagation();
+                    }
+                  }}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    if (next === "" || /^-?\d+$/.test(next)) setSortOrder(next);
+                  }}
+                />
+              </label>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="submit"
+                className="et-btn-primary min-w-40"
+                disabled={busy || !name.trim()}
+              >
+                {busy ? "Adding..." : "Add category"}
+              </button>
+              {error ? <div className="text-sm text-red-200">{error}</div> : null}
+            </div>
+          </form>
+        ) : null}
       </div>
 
       <div className="et-card">
