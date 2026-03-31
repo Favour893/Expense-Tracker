@@ -205,12 +205,6 @@ function Entries() {
           <h1 className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">Entries</h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Add every income and expense, and keep it categorized.</p>
         </div>
-        <div className="flex w-full items-center gap-3 sm:w-auto">
-          <label className="text-sm text-slate-600 dark:text-slate-300">
-            Month
-            <input className="mt-1 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5 sm:w-auto" type="month" value={monthKey} onChange={(e) => setMonthKey(e.target.value)} />
-          </label>
-        </div>
       </div>
 
       <div className="et-card">
@@ -324,9 +318,20 @@ function Entries() {
       </div>
 
       <div className="et-card">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">Transactions</h2>
-          <div className="text-sm text-slate-600 dark:text-slate-300">{filteredTransactions.length} items</div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">Transactions</h2>
+            <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{filteredTransactions.length} items</div>
+          </div>
+          <label className="text-sm text-slate-600 dark:text-slate-300">
+            Month
+            <input
+              className="mt-1 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5 sm:w-auto"
+              type="month"
+              value={monthKey}
+              onChange={(e) => setMonthKey(e.target.value)}
+            />
+          </label>
         </div>
 
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
