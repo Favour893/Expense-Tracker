@@ -76,7 +76,7 @@ function Entries() {
   const [merchantOrPayee, setMerchantOrPayee] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [searchText, setSearchText] = useState<string>("");
-  const [showAddTransaction, setShowAddTransaction] = useState(true);
+  const [showAddTransactionModal, setShowAddTransactionModal] = useState(false);
 
   const typedCategories = useMemo(
     () => categories.filter((c) => c.isActive !== false && c.type === entryType),
@@ -162,7 +162,7 @@ function Entries() {
     }
   }, [typedCategories, categoryId]);
 
-  async function onAdd(e: React.FormEvent) {
+  async function onAdd(e: React.FormEvent, onSuccess?: () => void) {
     e.preventDefault();
     if (!uid) return;
     if (!dateStr || !categoryId) return;
@@ -192,6 +192,7 @@ function Entries() {
       setAmount("0");
       setMerchantOrPayee("");
       setDescription("");
+      if (onSuccess) onSuccess();
     } catch (e: any) {
       setError(e?.message || String(e));
     } finally {
@@ -200,7 +201,7 @@ function Entries() {
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="min-h-screen flex flex-col gap-6">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">Entries</h1>
@@ -208,141 +209,24 @@ function Entries() {
         </div>
       </div>
 
-      <div className="et-card">
-        <div className="flex items-center justify-between gap-4">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="et-card flex flex-col min-h-0 overflow-hidden">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold">Add transaction</h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              {showAddTransaction ? "Enter a new expense or income item." : "Tap the plus icon to add a transaction."}
-            </p>
-          </div>
-          <button
-            type="button"
-            className="et-btn-secondary inline-flex items-center gap-2"
-            onClick={() => setShowAddTransaction((show) => !show)}
-          >
-            <span className="text-xl font-bold">+</span>
-            {showAddTransaction ? "Hide" : "Add"}
-          </button>
-        </div>
-
-        {showAddTransaction ? (
-          <form className="mt-4 grid gap-4" onSubmit={onAdd}>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <label className="grid gap-2">
-                <span className="text-sm text-slate-600 dark:text-slate-300">Category type <span className="text-red-500">*</span></span>
-                <select
-                  className="et-input"
-                  value={entryType}
-                  onChange={(e) => setEntryType(e.target.value as TransactionType)}
-                >
-                  <option value="expense">Expense</option>
-                  <option value="income">Income</option>
-                </select>
-              </label>
-              <label className="grid gap-2">
-                <span className="text-sm text-slate-600 dark:text-slate-300">Date <span className="text-red-500">*</span></span>
-                <input className="et-input" type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} required />
-              </label>
-              <label className="grid gap-2">
-                <span className="text-sm text-slate-600 dark:text-slate-300">Amount ({currency}) <span className="text-red-500">*</span></span>
-                <input
-                  className="et-input"
-                  type="text"
-                  inputMode="decimal"
-                  data-arrow-edit="true"
-                  value={amount}
-                  onFocus={(e) => {
-                    if (e.currentTarget.value === "0") e.currentTarget.select();
-                  }}
-                  required
-                  onKeyDown={(e) => {
-                    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
-                      e.stopPropagation();
-                    }
-                  }}
-                  onChange={(e) => {
-                    const next = e.target.value;
-                    if (next === "" || /^\d*([.]\d{0,2})?$/.test(next)) setAmount(next);
-                  }}
-                />
-              </label>
-              <label className="grid gap-2">
-                <span className="text-sm text-slate-600 dark:text-slate-300">Category item <span className="text-red-500">*</span></span>
-                <select
-                  className="et-input"
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                  disabled={!typedCategories.length}
-                  required>
-                  {!typedCategories.length ? (
-                    <option value="">No {entryType} categories yet</option>
-                  ) : (
-                    <option value="">Select {entryType} category</option>
-                  )}
-                  {typedCategories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="text-lg font-semibold">Transactions</h2>
+              <button
+                type="button"
+                className="et-btn-secondary inline-flex items-center gap-2"
+                onClick={() => setShowAddTransactionModal(true)}
+              >
+                <span className="text-xl font-bold">+</span>
+                Add
+              </button>
             </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="grid gap-2">
-                <span className="text-sm text-slate-600 dark:text-slate-300">Merchant / Payee</span>
-                <input
-                  className="et-input"
-                  data-arrow-edit="true"
-                  value={merchantOrPayee}
-                  onFocus={(e) => {
-                    if (e.currentTarget.value) e.currentTarget.select();
-                  }}
-                  onKeyDown={(e) => {
-                    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
-                      e.stopPropagation();
-                    }
-                  }}
-                  onChange={(e) => setMerchantOrPayee(e.target.value)}
-                  placeholder="e.g., Amazon"
-                />
-              </label>
-              <label className="grid gap-2">
-                <span className="text-sm text-slate-600 dark:text-slate-300">Description</span>
-                <input
-                  className="et-input"
-                  data-arrow-edit="true"
-                  value={description}
-                  onFocus={(e) => {
-                    if (e.currentTarget.value) e.currentTarget.select();
-                  }}
-                  onKeyDown={(e) => {
-                    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
-                      e.stopPropagation();
-                    }
-                  }}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Optional note"
-                />
-              </label>
-            </div>
-
-            {error ? <div className="text-sm text-red-200">{error}</div> : null}
-
-            <button className="et-btn-primary" type="submit" disabled={busy || !selectedCategory}>
-              {busy ? "Saving..." : "Add entry"}
-            </button>
-          </form>
-        ) : null}
-      </div>
-
-      <div className="et-card">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold">Transactions</h2>
             <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{filteredTransactions.length} items</div>
           </div>
+
           <label className="text-sm text-slate-600 dark:text-slate-300">
             Month
             <input
@@ -365,20 +249,20 @@ function Entries() {
           <button
             type="button"
             className="h-11 min-w-24 rounded-xl border border-slate-200 bg-white px-4 font-semibold hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
-            onClick={() => {
-              setSearchText("");
-            }}
+            onClick={() => setSearchText("")}
           >
             Clear
           </button>
         </div>
+
         <datalist id="entry-search-suggestions">
           {entrySuggestions.map((item) => (
             <option key={item} value={item} />
           ))}
         </datalist>
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <div className="mt-4 flex-1 min-h-0 overflow-y-auto">
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <section className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/5">
             <h3 className="text-base font-semibold text-emerald-700 dark:text-emerald-300">Income</h3>
             <div className="mt-2 grid gap-3">
@@ -403,6 +287,7 @@ function Entries() {
                             {t.description ? <div className="mt-1 text-xs text-slate-600 dark:text-slate-300">{t.description}</div> : null}
                             <div className="mt-3">
                               <button
+                                type="button"
                                 className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
                                 onClick={async () => {
                                   if (!uid) return;
@@ -450,6 +335,7 @@ function Entries() {
                             {t.description ? <div className="mt-1 text-xs text-slate-600 dark:text-slate-300">{t.description}</div> : null}
                             <div className="mt-3">
                               <button
+                                type="button"
                                 className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
                                 onClick={async () => {
                                   if (!uid) return;
@@ -472,8 +358,144 @@ function Entries() {
               )}
             </div>
           </section>
+            </div>
+          </div>
         </div>
       </div>
+
+      {showAddTransactionModal ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+          <div className="w-full max-w-4xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-slate-950">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Add transaction</h2>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Enter a new income or expense item. The modal will close after you save.</p>
+              </div>
+              <button
+                type="button"
+                className="et-btn-secondary inline-flex items-center gap-2"
+                onClick={() => setShowAddTransactionModal(false)}
+              >
+                Close
+              </button>
+            </div>
+
+            <form className="mt-6 grid gap-4" onSubmit={(e) => onAdd(e, () => setShowAddTransactionModal(false))}>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <label className="grid gap-2">
+                  <span className="text-sm text-slate-600 dark:text-slate-300">Category type <span className="text-red-500">*</span></span>
+                  <select
+                    className="et-input"
+                    value={entryType}
+                    onChange={(e) => setEntryType(e.target.value as TransactionType)}
+                  >
+                    <option value="expense">Expense</option>
+                    <option value="income">Income</option>
+                  </select>
+                </label>
+                <label className="grid gap-2">
+                  <span className="text-sm text-slate-600 dark:text-slate-300">Date <span className="text-red-500">*</span></span>
+                  <input className="et-input" type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} required />
+                </label>
+                <label className="grid gap-2">
+                  <span className="text-sm text-slate-600 dark:text-slate-300">Amount ({currency}) <span className="text-red-500">*</span></span>
+                  <input
+                    className="et-input"
+                    type="text"
+                    inputMode="decimal"
+                    data-arrow-edit="true"
+                    value={amount}
+                    onFocus={(e) => {
+                      if (e.currentTarget.value === "0") e.currentTarget.select();
+                    }}
+                    required
+                    onKeyDown={(e) => {
+                      if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
+                        e.stopPropagation();
+                      }
+                    }}
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      if (next === "" || /^\d*([.]\d{0,2})?$/.test(next)) setAmount(next);
+                    }}
+                  />
+                </label>
+                <label className="grid gap-2">
+                  <span className="text-sm text-slate-600 dark:text-slate-300">Category item <span className="text-red-500">*</span></span>
+                  <select
+                    className="et-input"
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(e.target.value)}
+                    disabled={!typedCategories.length}
+                    required
+                  >
+                    {!typedCategories.length ? (
+                      <option value="">No {entryType} categories yet</option>
+                    ) : (
+                      <option value="">Select {entryType} category</option>
+                    )}
+                    {typedCategories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="grid gap-2">
+                  <span className="text-sm text-slate-600 dark:text-slate-300">Merchant / Payee</span>
+                  <input
+                    className="et-input"
+                    data-arrow-edit="true"
+                    value={merchantOrPayee}
+                    onFocus={(e) => {
+                      if (e.currentTarget.value) e.currentTarget.select();
+                    }}
+                    onKeyDown={(e) => {
+                      if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
+                        e.stopPropagation();
+                      }
+                    }}
+                    onChange={(e) => setMerchantOrPayee(e.target.value)}
+                    placeholder="e.g., Amazon"
+                  />
+                </label>
+                <label className="grid gap-2">
+                  <span className="text-sm text-slate-600 dark:text-slate-300">Description</span>
+                  <input
+                    className="et-input"
+                    data-arrow-edit="true"
+                    value={description}
+                    onFocus={(e) => {
+                      if (e.currentTarget.value) e.currentTarget.select();
+                    }}
+                    onKeyDown={(e) => {
+                      if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
+                        e.stopPropagation();
+                      }
+                    }}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Optional note"
+                  />
+                </label>
+              </div>
+
+              {error ? <div className="text-sm text-red-200">{error}</div> : null}
+
+              <div className="flex flex-wrap items-center gap-3">
+                <button className="et-btn-primary" type="submit" disabled={busy || !selectedCategory}>
+                  {busy ? "Saving..." : "Add entry"}
+                </button>
+                <button type="button" className="et-btn-secondary" onClick={() => setShowAddTransactionModal(false)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

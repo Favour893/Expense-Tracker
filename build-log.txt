@@ -1,0 +1,42 @@
+
+> build
+> next build
+
+  ▲ Next.js 14.2.35
+
+   Creating an optimized production build ...
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../typescript/lib/typescript' in c:\Projects\apps\web\node_modules\next\dist\build for build dependencies doesn't lead to expected result 'C:\Projects\apps\web\node_modules\typescript\lib\typescript.js', but to 'c:\Projects\apps\web\node_modules\typescript\lib\typescript.js' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../typescript/lib/typescript (expected C:\Projects\apps\web\node_modules\typescript\lib\typescript.js)
+<w>  at file dependencies c:\Projects\apps\web\node_modules\next\dist\build\load-jsconfig.js
+<w>  at file c:\Projects\apps\web\node_modules\next\dist\build\load-jsconfig.js
+<w>  at file dependencies c:\Projects\apps\web\node_modules\next\dist\build\webpack-config.js
+<w>  at file c:\Projects\apps\web\node_modules\next\dist\build\webpack-config.js
+<w>  at file dependencies c:\Projects\apps\web\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js
+<w>  at file c:\Projects\apps\web\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js
+<w>  at resolve commonjs c:\Projects\apps\web\node_modules\next\dist\build\webpack\loaders\next-swc-loader.js
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/8) ...
+   Generating static pages (2/8) 
+   Generating static pages (4/8) 
+   Generating static pages (6/8) 
+ ✓ Generating static pages (8/8)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    138 B          87.7 kB
+├ ○ /_not-found                          873 B          88.4 kB
+├ ○ /categories                          2.55 kB         212 kB
+├ ○ /entries                             3.76 kB         213 kB
+├ ○ /login                               4.12 kB         201 kB
+└ ○ /reports                             3.96 kB         213 kB
++ First Load JS shared by all            87.6 kB
+  ├ chunks/117-bc7541f9b59cd07d.js       31.7 kB
+  ├ chunks/fd9d1056-73e5c7545abdc720.js  53.6 kB
+  └ other shared chunks (total)          2.19 kB
+
+
+○  (Static)  prerendered as static content
+
