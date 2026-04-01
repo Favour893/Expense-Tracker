@@ -77,7 +77,7 @@ export function computeTop3ExpensePercentSumRounded1(expenseTransactions: Transa
 }
 
 /** e.g. `2026-04` → `April, 2026` (uses UTC month from YYYY-MM). */
-export function formatReportMonthLabel(monthKey: string, locale = "en-US"): string {
+export function formatReportMonthLabel(monthKey: string, locale = "en-GB"): string {
   const [y, m] = String(monthKey || "").split("-");
   const year = Number(y);
   const monthIndex = Number(m) - 1;

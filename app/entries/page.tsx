@@ -10,8 +10,10 @@ import type { Category, Transaction, TransactionType } from "../../src/types/app
 import { createTransaction, deleteTransaction, listTransactionsByMonth } from "../../src/lib/repos/entriesRepo";
 import { listCategories } from "../../src/lib/repos/categoriesRepo";
 import { PageLoadingShimmer } from "../../src/components/ui/PageLoadingShimmer";
+import { IncomeExpenseTabs, type IncomeExpenseTab } from "../../src/components/ui/IncomeExpenseTabs";
 import { CURRENCIES } from "../../src/lib/constants/countries";
 import { getUserDocument, saveProfile, saveUserDocument } from "../../src/lib/repos/profileRepo";
+import { formatUkDate } from "../../src/lib/formatDisplayDate";
 
 function monthKeyFromDateInput(dateStr: string) {
   const [y, m] = String(dateStr || "").split("-");
@@ -30,12 +32,6 @@ function currentMonthKey() {
   const y = dt.getFullYear();
   const m = String(dt.getMonth() + 1).padStart(2, "0");
   return `${y}-${m}`;
-}
-
-function formatDate(ts: any) {
-  if (!ts) return "";
-  const dt = ts.toDate ? ts.toDate() : new Date(ts);
-  return dt.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
 }
 
 function formatMoney(value: number, currency: string) {
@@ -100,6 +96,9 @@ function Entries() {
   const [showAddTransactionModal, setShowAddTransactionModal] = useState(false);
   const [currencyBusy, setCurrencyBusy] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
+  const [listTab, setListTab] = useState<IncomeExpenseTab>("expense");
+
+  const entriesPanelId = "entries-ledger-panel";
 
   const typedCategories = useMemo(
     () => categories.filter((c) => c.isActive !== false && c.type === entryType),
@@ -116,7 +115,7 @@ function Entries() {
     if (!q) return transactions;
     return transactions.filter((t) => {
       const catName = categories.find((c) => c.id === t.categoryId)?.name || "";
-      const dt = formatDate(t.date);
+      const dt = formatUkDate(t.date);
       const joined = [
         catName,
         t.type,
@@ -149,6 +148,21 @@ function Entries() {
   const expenseTransactions = useMemo(
     () => filteredTransactions.filter((t) => t.type === "expense"),
     [filteredTransactions]
+  );
+
+  const sortedIncomeTxs = useMemo(
+    () =>
+      incomeTransactions
+        .slice()
+        .sort((a, b) => (b.date?.toMillis ? b.date.toMillis() : 0) - (a.date?.toMillis ? a.date.toMillis() : 0)),
+    [incomeTransactions]
+  );
+  const sortedExpenseTxs = useMemo(
+    () =>
+      expenseTransactions
+        .slice()
+        .sort((a, b) => (b.date?.toMillis ? b.date.toMillis() : 0) - (a.date?.toMillis ? a.date.toMillis() : 0)),
+    [expenseTransactions]
   );
 
   async function refreshCategories() {
@@ -259,97 +273,109 @@ function Entries() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col gap-6">
-      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">Entries</h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Add every income and expense, and keep it categorized.</p>
-        </div>
+    <div className="mx-auto flex h-[100dvh] max-w-6xl min-h-0 flex-col gap-4 overflow-hidden px-4 py-4 sm:gap-5 sm:py-6">
+      <div className="shrink-0">
+        <h1 className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">Entries</h1>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Add every income and expense, and keep it categorized.</p>
       </div>
 
       {pageLoading ? (
-        <PageLoadingShimmer label="Loading entries" />
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <PageLoadingShimmer label="Loading entries" />
+        </div>
       ) : (
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="et-card flex flex-col min-h-0 overflow-hidden">
-          <div className="flex flex-col gap-3">
-            <div>
-              <div className="flex flex-wrap items-center gap-3">
-                <h2 className="text-lg font-semibold">Transactions</h2>
-                <button
-                  type="button"
-                  className="et-btn-secondary inline-flex items-center gap-2"
-                  onClick={() => setShowAddTransactionModal(true)}
-                >
-                  <span className="text-xl font-bold">+</span>
-                  Add
-                </button>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="et-card flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="flex shrink-0 flex-col gap-3">
+              <div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <h2 className="text-lg font-semibold">Transactions</h2>
+                  <button
+                    type="button"
+                    className="et-btn-secondary inline-flex items-center gap-2"
+                    onClick={() => setShowAddTransactionModal(true)}
+                  >
+                    <span className="text-xl font-bold">+</span>
+                    Add
+                  </button>
+                </div>
+                <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{filteredTransactions.length} items</div>
               </div>
-              <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{filteredTransactions.length} items</div>
+
+              <div className="ml-auto flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+                <label className="flex w-full flex-row flex-wrap items-center justify-end gap-4 text-sm text-slate-600 dark:text-slate-300 sm:w-auto">
+                  <span className="shrink-0 font-medium">Select Month</span>
+                  <input
+                    className="h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5 sm:w-auto sm:flex-initial"
+                    type="month"
+                    value={monthKey}
+                    onChange={(e) => setMonthKey(e.target.value)}
+                  />
+                </label>
+                <label className="flex w-full flex-row flex-wrap items-center justify-end gap-4 text-sm text-slate-600 dark:text-slate-300 sm:w-auto">
+                  <span className="shrink-0 font-medium">Currency</span>
+                  <select
+                    className="et-input h-11 min-w-[10rem] sm:min-w-[12rem]"
+                    value={currency}
+                    disabled={currencyBusy}
+                    onChange={(e) => onCurrencyChange(e.target.value)}
+                    aria-label="Display currency for amounts"
+                  >
+                    {CURRENCIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
             </div>
 
-            <div className="ml-auto flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-              <label className="flex w-full flex-row flex-wrap items-center justify-end gap-4 text-sm text-slate-600 dark:text-slate-300 sm:w-auto">
-                <span className="shrink-0 font-medium">Select Month</span>
-                <input
-                  className="h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5 sm:w-auto sm:flex-initial"
-                  type="month"
-                  value={monthKey}
-                  onChange={(e) => setMonthKey(e.target.value)}
-                />
-              </label>
-              <label className="flex w-full flex-row flex-wrap items-center justify-end gap-4 text-sm text-slate-600 dark:text-slate-300 sm:w-auto">
-                <span className="shrink-0 font-medium">Currency</span>
-                <select
-                  className="et-input h-11 min-w-[10rem] sm:min-w-[12rem]"
-                  value={currency}
-                  disabled={currencyBusy}
-                  onChange={(e) => onCurrencyChange(e.target.value)}
-                  aria-label="Display currency for amounts"
-                >
-                  {CURRENCIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </label>
+            <div className="mt-4 flex shrink-0 flex-col gap-2 sm:flex-row">
+              <input
+                className="h-11 flex-1 rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5"
+                placeholder="Search category, merchant, description, date or amount"
+                list="entry-search-suggestions"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+              <button
+                type="button"
+                className="h-11 min-w-24 rounded-xl border border-slate-200 bg-white px-4 font-semibold hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                onClick={() => setSearchText("")}
+              >
+                Clear
+              </button>
             </div>
-          </div>
 
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-          <input
-            className="h-11 flex-1 rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5"
-            placeholder="Search category, merchant, description, date or amount"
-            list="entry-search-suggestions"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
-          <button
-            type="button"
-            className="h-11 min-w-24 rounded-xl border border-slate-200 bg-white px-4 font-semibold hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
-            onClick={() => setSearchText("")}
-          >
-            Clear
-          </button>
-        </div>
+            <datalist id="entry-search-suggestions">
+              {entrySuggestions.map((item) => (
+                <option key={item} value={item} />
+              ))}
+            </datalist>
 
-        <datalist id="entry-search-suggestions">
-          {entrySuggestions.map((item) => (
-            <option key={item} value={item} />
-          ))}
-        </datalist>
-
-        <div className="mt-4 flex-1 min-h-0 overflow-y-auto">
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          <section className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/5">
-            <h3 className="text-base font-semibold text-emerald-700 dark:text-emerald-300">Income</h3>
-            <div className="mt-2 grid gap-3">
-              {incomeTransactions.length ? (
-                incomeTransactions
-                  .slice()
-                  .sort((a, b) => (b.date?.toMillis ? b.date.toMillis() : 0) - (a.date?.toMillis ? a.date.toMillis() : 0))
-                  .map((t) => {
+            <div className="mt-4 flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+              <IncomeExpenseTabs
+                panelId={entriesPanelId}
+                value={listTab}
+                onChange={setListTab}
+                incomeCount={incomeTransactions.length}
+                expenseCount={expenseTransactions.length}
+                className="shrink-0"
+              />
+              <div
+                role="tabpanel"
+                id={entriesPanelId}
+                aria-labelledby={`${entriesPanelId}-tab-${listTab}`}
+                className={
+                  listTab === "income"
+                    ? "min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/5"
+                    : "min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-rose-200 bg-rose-50/40 p-3 dark:border-rose-500/30 dark:bg-rose-500/5"
+                }
+              >
+                <h3 className="sr-only">{listTab === "income" ? "Income entries" : "Expense entries"}</h3>
+                <div className="grid gap-3">
+                  {(listTab === "income" ? sortedIncomeTxs : sortedExpenseTxs).map((t) => {
                     const catName = categories.find((c) => c.id === t.categoryId)?.name || "Unknown";
                     const sign = t.type === "income" ? "+" : "-";
                     const amountStr = `${sign} ${formatMoney(Number(t.amount || 0), currency)}`;
@@ -358,7 +384,7 @@ function Entries() {
                         <div className="flex items-start justify-between gap-4">
                           <div>
                             <div className="font-semibold">{catName}</div>
-                            <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{formatDate(t.date)}</div>
+                            <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{formatUkDate(t.date)}</div>
                             {t.merchantOrPayee ? <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{t.merchantOrPayee}</div> : null}
                           </div>
                           <div className="text-right">
@@ -383,64 +409,18 @@ function Entries() {
                         </div>
                       </div>
                     );
-                  })
-              ) : (
-                <div className="text-sm text-slate-600 dark:text-slate-300">No income entries found for {monthKey}.</div>
-              )}
-            </div>
-          </section>
-
-          <section className="rounded-xl border border-rose-200 bg-rose-50/40 p-3 dark:border-rose-500/30 dark:bg-rose-500/5">
-            <h3 className="text-base font-semibold text-rose-700 dark:text-rose-300">Expense</h3>
-            <div className="mt-2 grid gap-3">
-              {expenseTransactions.length ? (
-                expenseTransactions
-                  .slice()
-                  .sort((a, b) => (b.date?.toMillis ? b.date.toMillis() : 0) - (a.date?.toMillis ? a.date.toMillis() : 0))
-                  .map((t) => {
-                    const catName = categories.find((c) => c.id === t.categoryId)?.name || "Unknown";
-                    const sign = t.type === "income" ? "+" : "-";
-                    const amountStr = `${sign} ${formatMoney(Number(t.amount || 0), currency)}`;
-                    return (
-                      <div key={t.id} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <div className="font-semibold">{catName}</div>
-                            <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{formatDate(t.date)}</div>
-                            {t.merchantOrPayee ? <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{t.merchantOrPayee}</div> : null}
-                          </div>
-                          <div className="text-right">
-                            <div className="text-base font-bold">{amountStr}</div>
-                            {t.description ? <div className="mt-1 text-xs text-slate-600 dark:text-slate-300">{t.description}</div> : null}
-                            <div className="mt-3">
-                              <button
-                                type="button"
-                                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
-                                onClick={async () => {
-                                  if (!uid) return;
-                                  const ok = confirm("Delete this entry?");
-                                  if (!ok) return;
-                                  await deleteTransaction(uid, t.id);
-                                  await refreshTransactions(monthKey);
-                                }}
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-              ) : (
-                <div className="text-sm text-slate-600 dark:text-slate-300">No expense entries found for {monthKey}.</div>
-              )}
-            </div>
-          </section>
+                  })}
+                  {listTab === "income" && !sortedIncomeTxs.length ? (
+                    <div className="text-sm text-slate-600 dark:text-slate-300">No income entries found for {monthKey}.</div>
+                  ) : null}
+                  {listTab === "expense" && !sortedExpenseTxs.length ? (
+                    <div className="text-sm text-slate-600 dark:text-slate-300">No expense entries found for {monthKey}.</div>
+                  ) : null}
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
       )}
 
       {showAddTransactionModal ? (

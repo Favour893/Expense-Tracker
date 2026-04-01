@@ -8,6 +8,7 @@ import { useNotifications } from "../../src/components/notifications/Notificatio
 import type { Category, CategoryType } from "../../src/types/app";
 import { createCategory, deleteCategory, listCategories } from "../../src/lib/repos/categoriesRepo";
 import { PageLoadingShimmer } from "../../src/components/ui/PageLoadingShimmer";
+import { IncomeExpenseTabs, type IncomeExpenseTab } from "../../src/components/ui/IncomeExpenseTabs";
 
 export default function CategoriesPage() {
   return (
@@ -31,6 +32,9 @@ function Categories() {
   const [searchText, setSearchText] = useState("");
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [listTab, setListTab] = useState<IncomeExpenseTab>("expense");
+
+  const categoriesPanelId = "categories-ledger-panel";
 
   const filteredCategories = useMemo(() => {
     const q = searchText.trim().toLowerCase();
@@ -107,127 +111,114 @@ function Categories() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col gap-6">
-      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">Categories</h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Create income/expense categories so every entry has a clear purpose.</p>
-        </div>
+    <div className="mx-auto flex h-[100dvh] max-w-6xl min-h-0 flex-col gap-4 overflow-hidden px-4 py-4 sm:gap-5 sm:py-6">
+      <div className="shrink-0">
+        <h1 className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">Categories</h1>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Create income/expense categories so every entry has a clear purpose.</p>
       </div>
 
       {initialLoad ? (
-        <PageLoadingShimmer label="Loading categories" />
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <PageLoadingShimmer label="Loading categories" />
+        </div>
       ) : (
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="et-card flex flex-col min-h-0 overflow-hidden">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-lg font-semibold">Your categories</h2>
-            <button
-              type="button"
-              className="et-btn-secondary inline-flex items-center gap-2"
-              onClick={() => setShowAddCategoryModal(true)}
-            >
-              <span className="text-xl font-bold">+</span>
-              Add category
-            </button>
-          </div>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="et-card flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="flex shrink-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-lg font-semibold">Your categories</h2>
+              <button
+                type="button"
+                className="et-btn-secondary inline-flex items-center gap-2"
+                onClick={() => setShowAddCategoryModal(true)}
+              >
+                <span className="text-xl font-bold">+</span>
+                Add category
+              </button>
+            </div>
 
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            <input
-              className="h-11 flex-1 rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5"
-              placeholder="Search category name or type"
-              list="category-search-suggestions"
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-            />
-            <button
-              type="button"
-              className="h-11 min-w-24 rounded-xl border border-slate-200 bg-white px-4 font-semibold hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
-              onClick={() => setSearchText("")}
-            >
-              Clear
-            </button>
-          </div>
+            <div className="mt-4 flex shrink-0 flex-col gap-2 sm:flex-row">
+              <input
+                className="h-11 flex-1 rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5"
+                placeholder="Search category name or type"
+                list="category-search-suggestions"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+              <button
+                type="button"
+                className="h-11 min-w-24 rounded-xl border border-slate-200 bg-white px-4 font-semibold hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                onClick={() => setSearchText("")}
+              >
+                Clear
+              </button>
+            </div>
 
-          <datalist id="category-search-suggestions">
-            {categorySuggestions.map((item) => (
-              <option key={item} value={item} />
-            ))}
-          </datalist>
+            <datalist id="category-search-suggestions">
+              {categorySuggestions.map((item) => (
+                <option key={item} value={item} />
+              ))}
+            </datalist>
 
-          <div className="mt-4 flex-1 min-h-0 overflow-y-auto">
             {!categories.length ? (
-              <div className="mt-4 text-sm text-slate-600 dark:text-slate-300">
+              <div className="mt-4 min-h-0 flex-1 overflow-y-auto text-sm text-slate-600 dark:text-slate-300">
                 No categories yet. Use the add button above to create one.
               </div>
-            ) : null}
-
-            <div className="mt-4 grid gap-4 lg:grid-cols-2">
-              <section className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/5">
-                <h3 className="text-base font-semibold text-emerald-700 dark:text-emerald-300">Income</h3>
-                <div className="mt-2 grid gap-3">
-                  {incomeCategories.map((c) => (
-                    <div key={c.id} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="font-semibold">{c.name}</div>
+            ) : (
+              <div className="mt-4 flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+                <IncomeExpenseTabs
+                  panelId={categoriesPanelId}
+                  value={listTab}
+                  onChange={setListTab}
+                  incomeCount={incomeCategories.length}
+                  expenseCount={expenseCategories.length}
+                  className="shrink-0"
+                />
+                <div
+                  role="tabpanel"
+                  id={categoriesPanelId}
+                  aria-labelledby={`${categoriesPanelId}-tab-${listTab}`}
+                  className={
+                    listTab === "income"
+                      ? "min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/5"
+                      : "min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-rose-200 bg-rose-50/40 p-3 dark:border-rose-500/30 dark:bg-rose-500/5"
+                  }
+                >
+                  <h3 className="sr-only">{listTab === "income" ? "Income categories" : "Expense categories"}</h3>
+                  <div className="grid gap-3">
+                    {(listTab === "income" ? incomeCategories : expenseCategories).map((c) => (
+                      <div key={c.id} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="font-semibold">{c.name}</div>
+                          </div>
+                          <button
+                            type="button"
+                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                            onClick={async () => {
+                              if (!uid) return;
+                              const ok = confirm("Delete category \"" + c.name + "\"?");
+                              if (!ok) return;
+                              await deleteCategory(uid, c.id);
+                              await refresh();
+                            }}
+                          >
+                            Delete
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
-                          onClick={async () => {
-                            if (!uid) return;
-                            const ok = confirm("Delete category \"" + c.name + "\"?");
-                            if (!ok) return;
-                            await deleteCategory(uid, c.id);
-                            await refresh();
-                          }}
-                        >
-                          Delete
-                        </button>
                       </div>
-                    </div>
-                  ))}
-                  {!incomeCategories.length ? (
-                    <div className="text-sm text-slate-600 dark:text-slate-300">No income categories yet.</div>
-                  ) : null}
+                    ))}
+                    {listTab === "income" && !incomeCategories.length ? (
+                      <div className="text-sm text-slate-600 dark:text-slate-300">No income categories yet.</div>
+                    ) : null}
+                    {listTab === "expense" && !expenseCategories.length ? (
+                      <div className="text-sm text-slate-600 dark:text-slate-300">No expense categories yet.</div>
+                    ) : null}
+                  </div>
                 </div>
-              </section>
-
-              <section className="rounded-xl border border-rose-200 bg-rose-50/40 p-3 dark:border-rose-500/30 dark:bg-rose-500/5">
-                <h3 className="text-base font-semibold text-rose-700 dark:text-rose-300">Expense</h3>
-                <div className="mt-2 grid gap-3">
-                  {expenseCategories.map((c) => (
-                    <div key={c.id} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="font-semibold">{c.name}</div>
-                        </div>
-                        <button
-                          type="button"
-                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
-                          onClick={async () => {
-                            if (!uid) return;
-                            const ok = confirm("Delete category \"" + c.name + "\"?");
-                            if (!ok) return;
-                            await deleteCategory(uid, c.id);
-                            await refresh();
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  {!expenseCategories.length ? (
-                    <div className="text-sm text-slate-600 dark:text-slate-300">No expense categories yet.</div>
-                  ) : null}
-                </div>
-              </section>
-            </div>
+              </div>
+            )}
           </div>
         </div>
-      </div>
       )}
 
       {showAddCategoryModal ? (

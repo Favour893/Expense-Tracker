@@ -16,18 +16,13 @@ import {
 import { ReportPreview } from "../../src/components/reports/ReportPreview";
 import { ExportPdfButton } from "../../src/components/reports/ExportPdfButton";
 import { PageLoadingShimmer } from "../../src/components/ui/PageLoadingShimmer";
+import { formatUkDate } from "../../src/lib/formatDisplayDate";
 
 function currentMonthKey() {
   const dt = new Date();
   const y = dt.getFullYear();
   const m = String(dt.getMonth() + 1).padStart(2, "0");
   return `${y}-${m}`;
-}
-
-function formatDate(ts: any) {
-  if (!ts) return "";
-  const dt = ts.toDate ? ts.toDate() : new Date(ts);
-  return dt.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
 }
 
 function dateInputValue(ts: any) {
@@ -105,7 +100,7 @@ function Reports() {
       if (selectedCategoryId && t.categoryId !== selectedCategoryId) return false;
       if (selectedDate && dateInputValue(t.date) !== selectedDate) return false;
       if (!q) return true;
-      const joined = [formatDate(t.date), categoryName, String(t.amount || ""), t.description || "", t.merchantOrPayee || ""]
+      const joined = [formatUkDate(t.date), categoryName, String(t.amount || ""), t.description || "", t.merchantOrPayee || ""]
         .join(" ")
         .toLowerCase();
       return joined.includes(q);
@@ -130,7 +125,7 @@ function Reports() {
       currency,
       monthKey,
       hasLastMonth,
-      locale: "en-US",
+      locale: "en-GB",
       top3PercentSumRounded1Override: top3PercentSumRoundedFromTable,
       top3SpendingBasisTotal: filteredExpenseTotal
     });
@@ -156,7 +151,7 @@ function Reports() {
       const amount = Number(t.amount || 0);
       return {
         id: t.id,
-        date: formatDate(t.date),
+        date: formatUkDate(t.date),
         category: categoryMap.get(t.categoryId) || "Unknown",
         amount,
         pctOfTotal: total > 0 ? (amount / total) * 100 : 0,
@@ -194,7 +189,7 @@ function Reports() {
         totalExpenseAmount > 0 ? (amount / totalExpenseAmount) * 100 : 0;
       return {
         id: t.id,
-        date: formatDate(t.date),
+        date: formatUkDate(t.date),
         category: categoryMap.get(t.categoryId) || "Unknown",
         amount,
         pctOfTotal,
