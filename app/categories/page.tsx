@@ -111,10 +111,12 @@ function Categories() {
   }
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden sm:gap-3">
+    <div className="flex min-h-0 w-full flex-1 flex-col gap-1.5 overflow-hidden sm:gap-2">
       <div className="shrink-0">
-        <h1 className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">Categories</h1>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Create income/expense categories so every entry has a clear purpose.</p>
+        <h1 className="text-xl font-bold text-indigo-700 dark:text-indigo-300 sm:text-2xl">Categories</h1>
+        <p className="mt-0.5 line-clamp-2 text-xs text-slate-600 dark:text-slate-300 sm:mt-1 sm:text-sm">
+          Create income/expense categories so every entry has a clear purpose.
+        </p>
       </div>
 
       {initialLoad ? (
@@ -136,17 +138,18 @@ function Categories() {
               </button>
             </div>
 
-            <div className="mt-2 flex shrink-0 flex-col gap-2 sm:flex-row">
+            <div className="mt-2 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-stretch">
               <input
-                className="h-11 flex-1 rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5"
-                placeholder="Search category name or type"
+                className="et-search flex-1"
+                placeholder="Search categories"
+                title="Search by category name or type"
                 list="category-search-suggestions"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
               />
               <button
                 type="button"
-                className="h-11 min-w-24 rounded-xl border border-slate-200 bg-white px-4 font-semibold hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                className="et-btn-secondary min-w-[5.5rem] shrink-0 sm:w-auto"
                 onClick={() => setSearchText("")}
               >
                 Clear

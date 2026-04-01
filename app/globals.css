@@ -64,19 +64,25 @@ body {
   }
 
   .et-card {
-    @apply rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-lg shadow-indigo-100/40 backdrop-blur-sm dark:border-white/10 dark:bg-white/5 dark:shadow-none;
+    @apply rounded-2xl border border-slate-200 bg-white/90 p-3 shadow-lg shadow-indigo-100/40 backdrop-blur-sm dark:border-white/10 dark:bg-white/5 dark:shadow-none sm:p-5;
   }
 
   .et-input {
-    @apply h-11 rounded-xl border border-slate-200 bg-white px-3 text-slate-900 dark:border-white/10 dark:bg-slate-900 dark:text-slate-100;
+    @apply min-h-12 rounded-xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 dark:border-white/10 dark:bg-slate-900 dark:text-slate-100;
+  }
+
+  /** Prominent search fields (Categories / Entries / Reports filter search). */
+  .et-search {
+    @apply min-h-[3rem] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 shadow-sm dark:border-white/10 dark:bg-slate-900 dark:text-slate-100;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .et-btn-primary {
-    @apply h-11 rounded-xl bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-500 px-4 font-semibold text-white shadow-md shadow-indigo-300/40 transition hover:opacity-90 disabled:opacity-60;
+    @apply min-h-12 rounded-xl bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-500 px-4 py-3 text-base font-semibold text-white shadow-md shadow-indigo-300/40 transition hover:opacity-90 disabled:opacity-60;
   }
 
   .et-btn-secondary {
-    @apply h-11 rounded-xl border border-slate-200 bg-white px-4 font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-100 dark:hover:bg-white/10;
+    @apply min-h-12 rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-100 dark:hover:bg-white/10;
   }
 }
 

@@ -263,10 +263,12 @@ function Entries() {
   }
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden sm:gap-3">
+    <div className="flex min-h-0 w-full flex-1 flex-col gap-1.5 overflow-hidden sm:gap-2">
       <div className="shrink-0">
-        <h1 className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">Entries</h1>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Add every income and expense, and keep it categorized.</p>
+        <h1 className="text-xl font-bold text-indigo-700 dark:text-indigo-300 sm:text-2xl">Entries</h1>
+        <p className="mt-0.5 line-clamp-2 text-xs text-slate-600 dark:text-slate-300 sm:mt-1 sm:text-sm">
+          Add every income and expense, and keep it categorized.
+        </p>
       </div>
 
       {pageLoading ? (
@@ -276,9 +278,9 @@ function Entries() {
       ) : (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="et-card flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="flex shrink-0 flex-col gap-3">
+            <div className="flex shrink-0 flex-col gap-2">
               <div>
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-lg font-semibold">Transactions</h2>
                   <button
                     type="button"
@@ -292,20 +294,20 @@ function Entries() {
                 <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{filteredTransactions.length} items</div>
               </div>
 
-              <div className="ml-auto flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-                <label className="flex w-full flex-row flex-wrap items-center justify-end gap-2 text-sm text-slate-600 dark:text-slate-300 sm:w-auto">
-                  <span className="shrink-0 font-medium">Select Month</span>
+              <div className="ml-auto flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+                <label className="flex w-full flex-row flex-wrap items-center justify-end gap-2 text-xs text-slate-600 dark:text-slate-300 sm:w-auto sm:text-sm">
+                  <span className="shrink-0 font-medium">Month</span>
                   <input
-                    className="h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5 sm:w-auto sm:flex-initial"
+                    className="et-input min-w-0 flex-1 sm:w-auto sm:flex-initial sm:min-w-[10rem]"
                     type="month"
                     value={monthKey}
                     onChange={(e) => setMonthKey(e.target.value)}
                   />
                 </label>
-                <label className="flex w-full flex-row flex-wrap items-center justify-end gap-2 text-sm text-slate-600 dark:text-slate-300 sm:w-auto">
+                <label className="flex w-full flex-row flex-wrap items-center justify-end gap-2 text-xs text-slate-600 dark:text-slate-300 sm:w-auto sm:text-sm">
                   <span className="shrink-0 font-medium">Currency</span>
                   <select
-                    className="et-input h-11 min-w-[10rem] sm:min-w-[12rem]"
+                    className="et-input min-w-[10rem] sm:min-w-[12rem]"
                     value={currency}
                     disabled={currencyBusy}
                     onChange={(e) => onCurrencyChange(e.target.value)}
@@ -321,17 +323,18 @@ function Entries() {
               </div>
             </div>
 
-        <div className="mt-2 flex shrink-0 flex-col gap-2 sm:flex-row">
-          <input
-            className="h-11 flex-1 rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5"
-            placeholder="Search category, description, date or amount"
+            <div className="mt-2 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-stretch">
+              <input
+                className="et-search flex-1"
+                placeholder="Search transactions"
+                title="Search by category, description, date or amount"
                 list="entry-search-suggestions"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
               />
               <button
                 type="button"
-                className="h-11 min-w-24 rounded-xl border border-slate-200 bg-white px-4 font-semibold hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                className="et-btn-secondary min-w-[5.5rem] shrink-0 sm:w-auto"
                 onClick={() => setSearchText("")}
               >
                 Clear
