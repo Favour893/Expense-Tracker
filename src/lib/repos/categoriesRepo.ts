@@ -5,11 +5,10 @@ import type { Category } from "../../types/app";
 export type CategoryCreateInput = {
   name: string;
   type: "income" | "expense";
-  sortOrder?: number;
 };
 
 export async function listCategories(uid: string): Promise<Category[]> {
-  const q = query(collection(db, "users", uid, "categories"), orderBy("sortOrder", "asc"), orderBy("name", "asc"));
+  const q = query(collection(db, "users", uid, "categories"), orderBy("name", "asc"));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...(d.data() as DocumentData) } as Category));
 }

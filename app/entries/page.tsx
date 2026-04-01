@@ -227,10 +227,10 @@ function Entries() {
             <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{filteredTransactions.length} items</div>
           </div>
 
-          <label className="text-sm text-slate-600 dark:text-slate-300">
+          <label className="ml-auto flex flex-col items-end gap-2 text-right text-sm text-slate-600 dark:text-slate-300">
             Month
             <input
-              className="mt-1 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5 sm:w-auto"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5 sm:w-auto"
               type="month"
               value={monthKey}
               onChange={(e) => setMonthKey(e.target.value)}

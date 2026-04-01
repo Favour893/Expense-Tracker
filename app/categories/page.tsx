@@ -25,7 +25,6 @@ function Categories() {
 
   const [name, setName] = useState("");
   const [type, setType] = useState<CategoryType>("expense");
-  const [sortOrder, setSortOrder] = useState<string>("0");
   const [searchText, setSearchText] = useState("");
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
 
@@ -76,10 +75,8 @@ function Categories() {
     setBusy(true);
     setError(null);
     try {
-      const parsedSortOrder = Number(sortOrder || "0");
-      await createCategory(uid, { name: trimmed, type, sortOrder: Number.isFinite(parsedSortOrder) ? parsedSortOrder : 0 });
+      await createCategory(uid, { name: trimmed, type });
       setName("");
-      setSortOrder("0");
       await refresh();
       if (onSuccess) onSuccess();
     } catch (e: any) {
@@ -227,7 +224,7 @@ function Categories() {
             </div>
 
             <form className="mt-6 grid gap-4" onSubmit={(e) => onAdd(e, () => setShowAddCategoryModal(false))}>
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <label className="grid gap-2">
                   <span className="text-sm text-slate-600 dark:text-slate-300">Type <span className="text-red-500">*</span></span>
                   <select className="et-input" value={type} onChange={(e) => setType(e.target.value as CategoryType)} required>
@@ -252,28 +249,6 @@ function Categories() {
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g., Groceries"
                     required
-                  />
-                </label>
-                <label className="grid gap-2">
-                  <span className="text-sm text-slate-600 dark:text-slate-300">Sort order</span>
-                  <input
-                    className="et-input"
-                    type="text"
-                    inputMode="numeric"
-                    data-arrow-edit="true"
-                    value={sortOrder}
-                    onFocus={(e) => {
-                      if (e.currentTarget.value === "0") e.currentTarget.select();
-                    }}
-                    onKeyDown={(e) => {
-                      if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
-                        e.stopPropagation();
-                      }
-                    }}
-                    onChange={(e) => {
-                      const next = e.target.value;
-                      if (next === "" || /^-?\d+$/.test(next)) setSortOrder(next);
-                    }}
                   />
                 </label>
               </div>

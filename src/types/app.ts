@@ -4,7 +4,6 @@ export type Category = {
   id: string;
   name: string;
   type: CategoryType;
-  sortOrder?: number;
   isActive?: boolean;
 };
 

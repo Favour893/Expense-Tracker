@@ -100,10 +100,10 @@ function Reports() {
           <h1 className="bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-500 bg-clip-text text-2xl font-bold text-transparent">Monthly Reports</h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Preview in the browser first, then export the same report as a PDF.</p>
         </div>
-        <div className="flex w-full items-center gap-3 sm:w-auto">
-          <label className="text-sm text-slate-600 dark:text-slate-300">
+        <div className="flex w-full justify-end sm:w-auto">
+          <label className="ml-auto flex flex-col items-end gap-2 text-right text-sm text-slate-600 dark:text-slate-300">
             Month
-            <input className="et-input mt-1 w-full sm:w-auto" type="month" value={monthKey} onChange={(e) => setMonthKey(e.target.value)} />
+            <input className="et-input w-full sm:w-auto" type="month" value={monthKey} onChange={(e) => setMonthKey(e.target.value)} />
           </label>
         </div>
       </div>
