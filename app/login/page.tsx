@@ -132,8 +132,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden px-2 py-2">
-      <div className="et-card mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col overflow-hidden">
+    <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden px-2 py-2">
+      <div className="et-card mx-auto flex h-0 min-h-0 w-full max-w-2xl flex-1 flex-col overflow-hidden">
         <div className="flex shrink-0 items-center gap-3">
           <CashLogo size={38} />
           <h1 className="bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-500 bg-clip-text text-3xl font-extrabold text-transparent">Expense Tracker</h1>
@@ -156,7 +156,7 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
+        <div className="mt-4 h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
           <div className="grid gap-3">
         {mode === "signup" ? (
           <div className="grid gap-3 sm:grid-cols-2">

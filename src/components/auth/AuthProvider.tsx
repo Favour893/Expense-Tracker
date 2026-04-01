@@ -374,7 +374,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             </div>
           </header>
         ) : null}
-        <main className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden px-2 py-1 md:px-3 md:py-2">{children}</main>
+        <main className="mx-auto flex h-0 min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden px-2 py-1 md:px-3 md:py-2">
+          {children}
+        </main>
       </div>
     </AuthContext.Provider>
   );

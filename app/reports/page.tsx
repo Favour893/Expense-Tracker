@@ -252,7 +252,7 @@ function Reports() {
   }, [uid, monthKey]);
 
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col gap-1.5 overflow-hidden sm:gap-2">
+    <div className="flex h-0 min-h-0 w-full min-w-0 flex-1 flex-col gap-1.5 overflow-hidden sm:gap-2">
       <div className="shrink-0 flex flex-col gap-1.5 sm:gap-2">
         <div>
           <h1 className="bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-500 bg-clip-text text-xl font-bold text-transparent sm:text-2xl">Monthly Reports</h1>
@@ -282,7 +282,7 @@ function Reports() {
           <PageLoadingShimmer label="Loading report" />
         </div>
       ) : (
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-hidden sm:gap-3 md:flex-row md:items-stretch">
+        <div className="flex h-0 min-h-0 min-w-0 flex-1 flex-col gap-2 overflow-hidden sm:gap-3 md:flex-row md:items-stretch">
           <div
             id="report-root"
             className="relative flex max-h-[min(34dvh,240px)] min-h-0 shrink-0 flex-col overflow-hidden sm:max-h-[min(38dvh,280px)] md:max-h-none md:min-h-0 md:flex-1"
@@ -333,7 +333,7 @@ function Reports() {
             ) : null}
           </div>
 
-          <section className="et-card flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <section className="et-card flex h-0 min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
             <div className="flex shrink-0 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
               <h2 className="text-base font-semibold sm:text-lg">Expense breakdown</h2>
               <div className="text-xs text-slate-600 dark:text-slate-300 sm:text-sm">{tableRows.length} records</div>
@@ -374,7 +374,7 @@ function Reports() {
               </div>
             </div>
 
-            <div className="mt-2 min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
+            <div className="mt-2 h-0 min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
               {!tableRows.length ? (
                 <div className="flex min-h-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300/80 bg-slate-50/70 px-4 py-10 text-center dark:border-white/20 dark:bg-white/5">
                   <div className="mb-2 text-3xl" aria-hidden="true">
