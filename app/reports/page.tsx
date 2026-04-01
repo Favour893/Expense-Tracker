@@ -6,9 +6,16 @@ import { useAuth } from "../../src/components/auth/AuthProvider";
 import type { Category, Transaction } from "../../src/types/app";
 import { listCategories } from "../../src/lib/repos/categoriesRepo";
 import { listTransactionsByMonth } from "../../src/lib/repos/entriesRepo";
-import { computeMonthlyReport, renderNarrative, shiftMonthKey } from "../../src/lib/reporting/reportModel";
+import {
+  computeMonthlyReport,
+  computeTop3ExpensePercentSumRounded1,
+  formatReportMonthLabel,
+  renderNarrative,
+  shiftMonthKey
+} from "../../src/lib/reporting/reportModel";
 import { ReportPreview } from "../../src/components/reports/ReportPreview";
 import { ExportPdfButton } from "../../src/components/reports/ExportPdfButton";
+import { PageLoadingShimmer } from "../../src/components/ui/PageLoadingShimmer";
 
 function currentMonthKey() {
   const dt = new Date();
@@ -79,23 +86,21 @@ function Reports() {
     });
   }, [categories, lastMonthTransactions, monthKey, transactions]);
 
-  const narrativeText = useMemo(() => {
-    if (!report) return "";
-    const hasLastMonth = lastMonthTransactions.length > 0;
-    return renderNarrative({
-      report,
-      currency,
-      monthKey,
-      hasLastMonth,
-      locale: "en-US"
-    });
-  }, [currency, lastMonthTransactions.length, monthKey, report]);
+  const expenseTransactions = useMemo(
+    () => transactions.filter((t) => t.type === "expense"),
+    [transactions]
+  );
 
-  const tableRows = useMemo(() => {
+  const expenseCategories = useMemo(
+    () => categories.filter((c) => c.type === "expense"),
+    [categories]
+  );
+
+  const filteredExpenseTransactions = useMemo(() => {
     const q = searchText.trim().toLowerCase();
     const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
 
-    const filtered = transactions.filter((t) => {
+    return expenseTransactions.filter((t) => {
       const categoryName = categoryMap.get(t.categoryId) || "Unknown";
       if (selectedCategoryId && t.categoryId !== selectedCategoryId) return false;
       if (selectedDate && dateInputValue(t.date) !== selectedDate) return false;
@@ -105,8 +110,65 @@ function Reports() {
         .toLowerCase();
       return joined.includes(q);
     });
+  }, [categories, expenseTransactions, searchText, selectedCategoryId, selectedDate]);
 
-    const sorted = filtered.slice().sort((a, b) => {
+  const filteredExpenseTotal = useMemo(
+    () => filteredExpenseTransactions.reduce((s, t) => s + Number(t.amount || 0), 0),
+    [filteredExpenseTransactions]
+  );
+
+  const top3PercentSumRoundedFromTable = useMemo(
+    () => computeTop3ExpensePercentSumRounded1(filteredExpenseTransactions, categories),
+    [filteredExpenseTransactions, categories]
+  );
+
+  const narrativeText = useMemo(() => {
+    if (!report) return "";
+    const hasLastMonth = lastMonthTransactions.length > 0;
+    return renderNarrative({
+      report,
+      currency,
+      monthKey,
+      hasLastMonth,
+      locale: "en-US",
+      top3PercentSumRounded1Override: top3PercentSumRoundedFromTable,
+      top3SpendingBasisTotal: filteredExpenseTotal
+    });
+  }, [
+    currency,
+    filteredExpenseTotal,
+    lastMonthTransactions.length,
+    monthKey,
+    report,
+    top3PercentSumRoundedFromTable
+  ]);
+
+  /** Full month, all expense rows — included in PDF export (#report-root). */
+  const pdfExpenseRows = useMemo(() => {
+    const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
+    const sorted = expenseTransactions.slice().sort((a, b) => {
+      const dateA = a.date?.toMillis ? a.date.toMillis() : 0;
+      const dateB = b.date?.toMillis ? b.date.toMillis() : 0;
+      return dateB - dateA;
+    });
+    const total = sorted.reduce((s, t) => s + Number(t.amount || 0), 0);
+    return sorted.map((t) => {
+      const amount = Number(t.amount || 0);
+      return {
+        id: t.id,
+        date: formatDate(t.date),
+        category: categoryMap.get(t.categoryId) || "Unknown",
+        amount,
+        pctOfTotal: total > 0 ? (amount / total) * 100 : 0,
+        description: t.description || ""
+      };
+    });
+  }, [categories, expenseTransactions]);
+
+  const tableRows = useMemo(() => {
+    const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
+
+    const sorted = filteredExpenseTransactions.slice().sort((a, b) => {
       const categoryA = (categoryMap.get(a.categoryId) || "Unknown").toLowerCase();
       const categoryB = (categoryMap.get(b.categoryId) || "Unknown").toLowerCase();
       const descriptionA = (a.description || "").toLowerCase();
@@ -124,14 +186,22 @@ function Reports() {
       return sortDir === "asc" ? compare : -compare;
     });
 
-    return sorted.map((t) => ({
-      id: t.id,
-      date: formatDate(t.date),
-      category: categoryMap.get(t.categoryId) || "Unknown",
-      amount: Number(t.amount || 0),
-      description: t.description || ""
-    }));
-  }, [categories, searchText, selectedCategoryId, selectedDate, sortBy, sortDir, transactions]);
+    const totalExpenseAmount = sorted.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+    return sorted.map((t) => {
+      const amount = Number(t.amount || 0);
+      const pctOfTotal =
+        totalExpenseAmount > 0 ? (amount / totalExpenseAmount) * 100 : 0;
+      return {
+        id: t.id,
+        date: formatDate(t.date),
+        category: categoryMap.get(t.categoryId) || "Unknown",
+        amount,
+        pctOfTotal,
+        description: t.description || ""
+      };
+    });
+  }, [categories, filteredExpenseTransactions, sortBy, sortDir]);
 
   const totalPages = Math.max(1, Math.ceil(tableRows.length / pageSize));
   const pagedRows = useMemo(() => {
@@ -139,6 +209,12 @@ function Reports() {
     const start = (safePage - 1) * pageSize;
     return tableRows.slice(start, start + pageSize);
   }, [page, tableRows, totalPages]);
+
+  useEffect(() => {
+    if (selectedCategoryId && !expenseCategories.some((c) => c.id === selectedCategoryId)) {
+      setSelectedCategoryId("");
+    }
+  }, [expenseCategories, selectedCategoryId]);
 
   useEffect(() => {
     setPage(1);
@@ -199,10 +275,57 @@ function Reports() {
         <div className="text-sm text-slate-600 dark:text-slate-300">
           {busy ? "Loading report..." : "Report ready."}
         </div>
-        <ExportPdfButton monthKey={monthKey} currency={currency} />
+        <ExportPdfButton monthKey={monthKey} currency={currency} disabled={busy || !report} />
       </div>
 
-      {report ? <ReportPreview report={report} monthKey={monthKey} currency={currency} narrativeText={narrativeText} /> : null}
+      {busy ? (
+        <PageLoadingShimmer label="Loading report" />
+      ) : (
+        <>
+      <div id="report-root" className="relative grid gap-6">
+        {report ? <ReportPreview report={report} monthKey={monthKey} currency={currency} narrativeText={narrativeText} /> : null}
+
+        {report ? (
+          <div className="report-pdf-expense-only" aria-hidden="true">
+            {pdfExpenseRows.length > 0 ? (
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-md shadow-indigo-100/40 dark:border-white/10 dark:bg-white/5 dark:shadow-none">
+                <h3 className="text-lg font-semibold text-indigo-700 dark:text-indigo-300">Expense breakdown</h3>
+                <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                  All expense entries for {formatReportMonthLabel(monthKey)}.
+                </p>
+                <div className="mt-4 overflow-visible rounded-xl border border-slate-200 dark:border-white/10">
+                  <table className="report-table min-w-full text-center text-sm text-slate-800 dark:text-slate-100">
+                    <thead className="bg-slate-50 text-slate-700 dark:bg-white/5 dark:text-slate-200">
+                      <tr>
+                        <th className="px-3 py-2 font-semibold">Date</th>
+                        <th className="px-3 py-2 font-semibold">Category</th>
+                        <th className="px-3 py-2 font-semibold">Amount</th>
+                        <th className="px-3 py-2 font-semibold">%</th>
+                        <th className="px-3 py-2 font-semibold">Description</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pdfExpenseRows.map((row) => (
+                        <tr key={row.id} className="border-t border-slate-200/80 dark:border-white/10">
+                          <td className="px-3 py-2">{row.date}</td>
+                          <td className="px-3 py-2">{row.category}</td>
+                          <td className="px-3 py-2 font-medium">{formatMoney(row.amount, currency)}</td>
+                          <td className="px-3 py-2 tabular-nums">{row.pctOfTotal.toFixed(1)}%</td>
+                          <td className="px-3 py-2">{row.description || "-"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            ) : (
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
+                No expense transactions for this month.
+              </div>
+            )}
+          </div>
+        ) : null}
+      </div>
 
       <section className="et-card">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -218,8 +341,8 @@ function Reports() {
             onChange={(e) => setSearchText(e.target.value)}
           />
           <select className="et-input" value={selectedCategoryId} onChange={(e) => setSelectedCategoryId(e.target.value)}>
-            <option value="">All categories</option>
-            {categories.map((c) => (
+            <option value="">All expense categories</option>
+            {expenseCategories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>
@@ -255,12 +378,18 @@ function Reports() {
         ) : (
           <>
             <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10">
-              <table className="min-w-full text-sm">
-                <thead className="bg-slate-50 text-left text-slate-700 dark:bg-white/5 dark:text-slate-200">
+              <table className="min-w-full text-center text-sm">
+                <thead className="bg-slate-50 text-slate-700 dark:bg-white/5 dark:text-slate-200">
                   <tr>
                     <th className="px-3 py-2 font-semibold">Date</th>
                     <th className="px-3 py-2 font-semibold">Category</th>
                     <th className="px-3 py-2 font-semibold">Amount</th>
+                    <th
+                      className="px-3 py-2 font-semibold"
+                      title="Share of total expense amount in the current filtered list"
+                    >
+                      %
+                    </th>
                     <th className="px-3 py-2 font-semibold">Description</th>
                   </tr>
                 </thead>
@@ -270,6 +399,9 @@ function Reports() {
                       <td className="px-3 py-2">{row.date}</td>
                       <td className="px-3 py-2">{row.category}</td>
                       <td className="px-3 py-2 font-medium">{formatMoney(row.amount, currency)}</td>
+                      <td className="px-3 py-2 tabular-nums text-slate-700 dark:text-slate-200">
+                        {row.pctOfTotal.toFixed(1)}%
+                      </td>
                       <td className="px-3 py-2">{row.description || "-"}</td>
                     </tr>
                   ))}
@@ -303,6 +435,8 @@ function Reports() {
           </>
         )}
       </section>
+        </>
+      )}
     </div>
   );
 }

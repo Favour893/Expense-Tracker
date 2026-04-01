@@ -23,6 +23,46 @@ body {
 }
 
 @layer components {
+  .et-skeleton-shimmer {
+    @apply relative overflow-hidden rounded-lg bg-slate-200/85 dark:bg-white/10;
+  }
+
+  .et-skeleton-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.45) 45%,
+      rgba(255, 255, 255, 0.65) 50%,
+      rgba(255, 255, 255, 0.45) 55%,
+      transparent 100%
+    );
+    transform: translateX(-100%);
+    animation: et-shimmer-sweep 1.45s ease-in-out infinite;
+  }
+
+  .dark .et-skeleton-shimmer::after {
+    background: linear-gradient(
+      105deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.06) 45%,
+      rgba(255, 255, 255, 0.14) 50%,
+      rgba(255, 255, 255, 0.06) 55%,
+      transparent 100%
+    );
+  }
+
+  @keyframes et-shimmer-sweep {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
   .et-card {
     @apply rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-lg shadow-indigo-100/40 backdrop-blur-sm dark:border-white/10 dark:bg-white/5 dark:shadow-none;
   }
@@ -61,6 +101,21 @@ select option {
   background-color: #0f172a;
 }
 
+/* Full expense table for PDF only: off-screen on screen; see body.pdf-export to include in capture. */
+#report-root .report-pdf-expense-only {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  width: min(720px, 100vw);
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* Report title: keep YYYY-MM on screen; show "April, 2026" only while exporting PDF. */
+#report-root .report-month-label-pdf {
+  display: none;
+}
+
 /* PDF export runtime tweaks. Keep white background for stable PDFs. */
 body.pdf-export {
   background: #ffffff !important;
@@ -72,10 +127,34 @@ body.pdf-export #report-root * {
   background: transparent !important;
 }
 
+body.pdf-export #report-root table,
+body.pdf-export #report-root th,
+body.pdf-export #report-root td {
+  color: #000000 !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+}
+
 body.pdf-export #report-root {
   background: #ffffff !important;
   color: #000000 !important;
   border: none !important;
+}
+
+body.pdf-export #report-root .report-pdf-expense-only {
+  position: static !important;
+  left: auto !important;
+  top: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  pointer-events: none;
+}
+
+body.pdf-export #report-root .report-month-label-screen {
+  display: none !important;
+}
+
+body.pdf-export #report-root .report-month-label-pdf {
+  display: inline !important;
 }
 
 body.pdf-export table.report-table th,

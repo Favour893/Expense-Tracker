@@ -7,6 +7,7 @@ import { useAuth } from "../../src/components/auth/AuthProvider";
 import { useNotifications } from "../../src/components/notifications/NotificationProvider";
 import type { Category, CategoryType } from "../../src/types/app";
 import { createCategory, deleteCategory, listCategories } from "../../src/lib/repos/categoriesRepo";
+import { PageLoadingShimmer } from "../../src/components/ui/PageLoadingShimmer";
 
 export default function CategoriesPage() {
   return (
@@ -29,6 +30,7 @@ function Categories() {
   const [type, setType] = useState<CategoryType>("expense");
   const [searchText, setSearchText] = useState("");
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
 
   const filteredCategories = useMemo(() => {
     const q = searchText.trim().toLowerCase();
@@ -64,8 +66,21 @@ function Categories() {
 
   useEffect(() => {
     if (!uid) return;
-    refresh().catch((e) => setError(e?.message || String(e)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let cancelled = false;
+    setInitialLoad(true);
+    listCategories(uid)
+      .then((data) => {
+        if (!cancelled) setCategories(data);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e?.message || String(e));
+      })
+      .finally(() => {
+        if (!cancelled) setInitialLoad(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [uid]);
 
   async function onAdd(e: React.FormEvent, onSuccess?: () => void) {
@@ -100,6 +115,9 @@ function Categories() {
         </div>
       </div>
 
+      {initialLoad ? (
+        <PageLoadingShimmer label="Loading categories" />
+      ) : (
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="et-card flex flex-col min-h-0 overflow-hidden">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -210,6 +228,7 @@ function Categories() {
           </div>
         </div>
       </div>
+      )}
 
       {showAddCategoryModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">

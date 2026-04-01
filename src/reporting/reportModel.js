@@ -18,6 +18,45 @@ function safePct(numerator, denominator) {
   return (Number(numerator) || 0) / d;
 }
 
+export function computeTop3ExpenseConcentration(expenseTransactions, categories) {
+  const txs = Array.isArray(expenseTransactions) ? expenseTransactions.filter((t) => t.type === "expense") : [];
+  const expensesTotal = txs.reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
+  if (expensesTotal <= 0) return 0;
+
+  const expenseByCategoryId = new Map();
+  for (const t of txs) {
+    const current = expenseByCategoryId.get(t.categoryId) || 0;
+    expenseByCategoryId.set(t.categoryId, current + (Number(t.amount) || 0));
+  }
+
+  const breakdown = Array.from(expenseByCategoryId.entries())
+    .map(([categoryId, amount]) => ({ categoryId, amount }))
+    .sort((a, b) => b.amount - a.amount);
+
+  const top3Amount = breakdown.slice(0, 3).reduce((acc, b) => acc + b.amount, 0);
+  return safePct(top3Amount, expensesTotal);
+}
+
+export function computeTop3ExpensePercentSumRounded1(expenseTransactions, categories) {
+  const txs = Array.isArray(expenseTransactions) ? expenseTransactions.filter((t) => t.type === "expense") : [];
+  const expensesTotal = txs.reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
+  if (expensesTotal <= 0) return 0;
+
+  const expenseByCategoryId = new Map();
+  for (const t of txs) {
+    const current = expenseByCategoryId.get(t.categoryId) || 0;
+    expenseByCategoryId.set(t.categoryId, current + (Number(t.amount) || 0));
+  }
+
+  const breakdown = Array.from(expenseByCategoryId.entries())
+    .map(([categoryId, amount]) => ({ categoryId, amount }))
+    .sort((a, b) => b.amount - a.amount);
+
+  const top3 = breakdown.slice(0, 3);
+  const sumPct = top3.reduce((acc, row) => acc + safePct(row.amount, expensesTotal) * 100, 0);
+  return Math.round(sumPct * 10) / 10;
+}
+
 export function computeMonthlyReport({ transactions, categories, monthKey, lastMonthTransactions }) {
   // Normalize into arrays of expense/income transactions.
   const txs = Array.isArray(transactions) ? transactions : [];
@@ -49,8 +88,8 @@ export function computeMonthlyReport({ transactions, categories, monthKey, lastM
     .sort((a, b) => b.amount - a.amount);
 
   const topCategory = breakdown[0] || null;
-  const top3Amount = breakdown.slice(0, 3).reduce((acc, b) => acc + b.amount, 0);
-  const top3Concentration = safePct(top3Amount, expensesTotal);
+  const top3Concentration = computeTop3ExpenseConcentration(expenseTxs, categories);
+  const top3PercentSumRounded1 = computeTop3ExpensePercentSumRounded1(expenseTxs, categories);
 
   const lastTxs = Array.isArray(lastMonthTransactions) ? lastMonthTransactions : [];
   const lastExpenseTxs = lastTxs.filter((t) => t.type === "expense");
@@ -68,6 +107,7 @@ export function computeMonthlyReport({ transactions, categories, monthKey, lastM
     narrative: {
       topCategoryName: topCategory ? topCategory.categoryName : null,
       top3Concentration,
+      top3PercentSumRounded1,
       expensesDelta,
       expensesDeltaPct
     }
@@ -96,16 +136,26 @@ export function renderNarrative({
   currency = "USD",
   monthKey,
   hasLastMonth,
-  locale = "en-US"
+  locale = "en-US",
+  top3PercentSumRounded1Override,
+  top3SpendingBasisTotal
 }) {
   const monthTitle = monthKeyToTitle(monthKey || report?.monthKey, locale);
   const { incomeTotal, expensesTotal } = report?.totals || { incomeTotal: 0, expensesTotal: 0 };
   const narrative = report?.narrative || {};
 
   const topCategoryName = narrative.topCategoryName;
-  const top3ConcentrationPct = (Number(narrative.top3Concentration) || 0) * 100;
 
-  const pctStr = `${top3ConcentrationPct.toFixed(0)}%`;
+  const top3PctDisplay =
+    top3PercentSumRounded1Override != null && !Number.isNaN(Number(top3PercentSumRounded1Override))
+      ? Number(top3PercentSumRounded1Override)
+      : Number(narrative.top3PercentSumRounded1) || 0;
+  const top3BasisTotal =
+    top3SpendingBasisTotal != null && !Number.isNaN(Number(top3SpendingBasisTotal))
+      ? Number(top3SpendingBasisTotal)
+      : expensesTotal;
+
+  const pctStr = `${top3PctDisplay.toFixed(1)}%`;
   const lines = [];
 
   // Line 1: Biggest category
@@ -116,8 +166,8 @@ export function renderNarrative({
   }
 
   // Line 2: Spending concentration
-  if ((Number(narrative.top3Concentration) || 0) > 0 && expensesTotal > 0) {
-    lines.push(`Your top 3 categories made up about ${pctStr} of your total spending.`);
+  if (top3PctDisplay > 0 && top3BasisTotal > 0) {
+    lines.push(`Your top 3 categories made up ${pctStr} of your total spending.`);
   } else {
     lines.push(`No spending concentration insights are available for ${monthTitle} yet.`);
   }

@@ -2,11 +2,20 @@
 
 import React, { useState } from "react";
 
-export function ExportPdfButton({ monthKey, currency }: { monthKey: string; currency: string }) {
+export function ExportPdfButton({
+  monthKey,
+  currency,
+  disabled
+}: {
+  monthKey: string;
+  currency: string;
+  disabled?: boolean;
+}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function onExport() {
+    if (disabled) return;
     setBusy(true);
     setError(null);
     try {
@@ -46,7 +55,7 @@ export function ExportPdfButton({ monthKey, currency }: { monthKey: string; curr
         type="button"
         className="rounded-xl border border-slate-200 bg-white px-4 py-2 font-semibold hover:bg-slate-50 disabled:opacity-60 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
         onClick={onExport}
-        disabled={busy}
+        disabled={busy || disabled}
       >
         {busy ? "Exporting..." : `Export to PDF`}
       </button>

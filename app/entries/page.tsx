@@ -9,6 +9,7 @@ import { useNotifications } from "../../src/components/notifications/Notificatio
 import type { Category, Transaction, TransactionType } from "../../src/types/app";
 import { createTransaction, deleteTransaction, listTransactionsByMonth } from "../../src/lib/repos/entriesRepo";
 import { listCategories } from "../../src/lib/repos/categoriesRepo";
+import { PageLoadingShimmer } from "../../src/components/ui/PageLoadingShimmer";
 import { CURRENCIES } from "../../src/lib/constants/countries";
 import { getUserDocument, saveProfile, saveUserDocument } from "../../src/lib/repos/profileRepo";
 
@@ -51,7 +52,11 @@ function formatAmountInput(rawValue: string) {
   if (!/^\d*([.]\d{0,2})?$/.test(normalized)) return null;
 
   const [wholePart, decimalPart] = normalized.split(".");
-  const withCommas = (wholePart || "0").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  let whole = (wholePart ?? "").replace(/^0+/, "");
+  if (whole === "" && decimalPart !== undefined) {
+    whole = "0";
+  }
+  const withCommas = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   if (normalized.endsWith(".")) return `${withCommas}.`;
   if (typeof decimalPart === "string") return `${withCommas}.${decimalPart}`;
   return withCommas;
@@ -94,6 +99,7 @@ function Entries() {
   const [searchText, setSearchText] = useState<string>("");
   const [showAddTransactionModal, setShowAddTransactionModal] = useState(false);
   const [currencyBusy, setCurrencyBusy] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
 
   const typedCategories = useMemo(
     () => categories.filter((c) => c.isActive !== false && c.type === entryType),
@@ -159,14 +165,23 @@ function Entries() {
 
   useEffect(() => {
     if (!uid) return;
-    refreshCategories().catch((e) => setError(e?.message || String(e)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uid]);
-
-  useEffect(() => {
-    if (!uid) return;
-    refreshTransactions(monthKey).catch((e) => setError(e?.message || String(e)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let cancelled = false;
+    setPageLoading(true);
+    Promise.all([listCategories(uid), listTransactionsByMonth(uid, monthKey)])
+      .then(([cats, txs]) => {
+        if (cancelled) return;
+        setCategories(cats);
+        setTransactions(txs);
+      })
+      .catch((e: any) => {
+        if (!cancelled) setError(e?.message || String(e));
+      })
+      .finally(() => {
+        if (!cancelled) setPageLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [uid, monthKey]);
 
   useEffect(() => {
@@ -252,6 +267,9 @@ function Entries() {
         </div>
       </div>
 
+      {pageLoading ? (
+        <PageLoadingShimmer label="Loading entries" />
+      ) : (
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="et-card flex flex-col min-h-0 overflow-hidden">
           <div className="flex flex-col gap-3">
@@ -423,6 +441,7 @@ function Entries() {
           </div>
         </div>
       </div>
+      )}
 
       {showAddTransactionModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">

@@ -73,7 +73,7 @@ function tx({ type, amount, categoryId }) {
 
   const expected = [
     "Your biggest expense category in March 2026 was Groceries.",
-    "Your top 3 categories made up about 100% of your total spending.",
+    "Your top 3 categories made up 100.0% of your total spending.",
     "Compared to last month, your total spending increased by +$70.00 (88%)."
   ].join("\n");
 
