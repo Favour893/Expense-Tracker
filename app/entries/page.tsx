@@ -90,7 +90,6 @@ function Entries() {
   const [amount, setAmount] = useState<string>("0");
   const [entryType, setEntryType] = useState<TransactionType>("expense");
   const [categoryId, setCategoryId] = useState<string>("");
-  const [merchantOrPayee, setMerchantOrPayee] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [searchText, setSearchText] = useState<string>("");
   const [showAddTransactionModal, setShowAddTransactionModal] = useState(false);
@@ -116,14 +115,7 @@ function Entries() {
     return transactions.filter((t) => {
       const catName = categories.find((c) => c.id === t.categoryId)?.name || "";
       const dt = formatUkDate(t.date);
-      const joined = [
-        catName,
-        t.type,
-        t.merchantOrPayee || "",
-        t.description || "",
-        dt,
-        String(t.amount || "")
-      ]
+      const joined = [catName, t.type, t.description || "", dt, String(t.amount || "")]
         .join(" ")
         .toLowerCase();
       return joined.includes(q);
@@ -134,7 +126,7 @@ function Entries() {
     const q = searchText.trim().toLowerCase();
     const source = transactions.flatMap((t) => {
       const catName = categories.find((c) => c.id === t.categoryId)?.name || "";
-      return [catName, t.merchantOrPayee || "", t.description || ""];
+      return [catName, t.description || ""];
     });
     const unique = Array.from(new Set(source.filter(Boolean)));
     if (!q) return unique.slice(0, 10);
@@ -226,7 +218,6 @@ function Entries() {
         amount: Math.abs(Number(amount.replace(/,/g, "")) || 0),
         type: txType,
         categoryId: cat.id,
-        merchantOrPayee: merchantOrPayee.trim() || undefined,
         description: description.trim() || undefined,
         monthKey: monthKeyFromDateInput(dateStr)
       });
@@ -236,7 +227,6 @@ function Entries() {
       if (mk === monthKey) await refreshTransactions(monthKey);
 
       setAmount("0");
-      setMerchantOrPayee("");
       setDescription("");
       notifySuccess("Transaction successfully added.");
       if (onSuccess) onSuccess();
@@ -273,7 +263,7 @@ function Entries() {
   }
 
   return (
-    <div className="mx-auto flex h-[100dvh] max-w-6xl min-h-0 flex-col gap-4 overflow-hidden px-4 py-4 sm:gap-5 sm:py-6">
+    <div className="flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden sm:gap-3">
       <div className="shrink-0">
         <h1 className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">Entries</h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Add every income and expense, and keep it categorized.</p>
@@ -303,7 +293,7 @@ function Entries() {
               </div>
 
               <div className="ml-auto flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-                <label className="flex w-full flex-row flex-wrap items-center justify-end gap-4 text-sm text-slate-600 dark:text-slate-300 sm:w-auto">
+                <label className="flex w-full flex-row flex-wrap items-center justify-end gap-2 text-sm text-slate-600 dark:text-slate-300 sm:w-auto">
                   <span className="shrink-0 font-medium">Select Month</span>
                   <input
                     className="h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5 sm:w-auto sm:flex-initial"
@@ -312,7 +302,7 @@ function Entries() {
                     onChange={(e) => setMonthKey(e.target.value)}
                   />
                 </label>
-                <label className="flex w-full flex-row flex-wrap items-center justify-end gap-4 text-sm text-slate-600 dark:text-slate-300 sm:w-auto">
+                <label className="flex w-full flex-row flex-wrap items-center justify-end gap-2 text-sm text-slate-600 dark:text-slate-300 sm:w-auto">
                   <span className="shrink-0 font-medium">Currency</span>
                   <select
                     className="et-input h-11 min-w-[10rem] sm:min-w-[12rem]"
@@ -331,10 +321,10 @@ function Entries() {
               </div>
             </div>
 
-            <div className="mt-4 flex shrink-0 flex-col gap-2 sm:flex-row">
-              <input
-                className="h-11 flex-1 rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5"
-                placeholder="Search category, merchant, description, date or amount"
+        <div className="mt-2 flex shrink-0 flex-col gap-2 sm:flex-row">
+          <input
+            className="h-11 flex-1 rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5"
+            placeholder="Search category, description, date or amount"
                 list="entry-search-suggestions"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
@@ -354,7 +344,7 @@ function Entries() {
               ))}
             </datalist>
 
-            <div className="mt-4 flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+            <div className="mt-2 flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
               <IncomeExpenseTabs
                 panelId={entriesPanelId}
                 value={listTab}
@@ -374,18 +364,17 @@ function Entries() {
                 }
               >
                 <h3 className="sr-only">{listTab === "income" ? "Income entries" : "Expense entries"}</h3>
-                <div className="grid gap-3">
+                <div className="grid gap-2">
                   {(listTab === "income" ? sortedIncomeTxs : sortedExpenseTxs).map((t) => {
                     const catName = categories.find((c) => c.id === t.categoryId)?.name || "Unknown";
                     const sign = t.type === "income" ? "+" : "-";
                     const amountStr = `${sign} ${formatMoney(Number(t.amount || 0), currency)}`;
                     return (
                       <div key={t.id} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
-                        <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start justify-between gap-3">
                           <div>
                             <div className="font-semibold">{catName}</div>
                             <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{formatUkDate(t.date)}</div>
-                            {t.merchantOrPayee ? <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{t.merchantOrPayee}</div> : null}
                           </div>
                           <div className="text-right">
                             <div className="text-base font-bold">{amountStr}</div>
@@ -425,8 +414,8 @@ function Entries() {
 
       {showAddTransactionModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-4xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-slate-950">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="w-full max-w-4xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-white/10 dark:bg-slate-950">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Add transaction</h2>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Enter a new income or expense item. The modal will close after you save.</p>
@@ -440,8 +429,8 @@ function Entries() {
               </button>
             </div>
 
-            <form className="mt-6 grid gap-4" onSubmit={(e) => onAdd(e, () => setShowAddTransactionModal(false))}>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <form className="mt-4 grid gap-3" onSubmit={(e) => onAdd(e, () => setShowAddTransactionModal(false))}>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <label className="grid gap-2">
                   <span className="text-sm text-slate-600 dark:text-slate-300">Category type <span className="text-red-500">*</span></span>
                   <select
@@ -502,28 +491,7 @@ function Entries() {
                     ))}
                   </select>
                 </label>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="grid gap-2">
-                  <span className="text-sm text-slate-600 dark:text-slate-300">Merchant / Payee</span>
-                  <input
-                    className="et-input"
-                    data-arrow-edit="true"
-                    value={merchantOrPayee}
-                    onFocus={(e) => {
-                      if (e.currentTarget.value) e.currentTarget.select();
-                    }}
-                    onKeyDown={(e) => {
-                      if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
-                        e.stopPropagation();
-                      }
-                    }}
-                    onChange={(e) => setMerchantOrPayee(e.target.value)}
-                    placeholder="e.g., Amazon"
-                  />
-                </label>
-                <label className="grid gap-2">
+                <label className="grid gap-2 sm:col-span-2 lg:col-span-3">
                   <span className="text-sm text-slate-600 dark:text-slate-300">Description</span>
                   <input
                     className="et-input"

@@ -271,10 +271,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider value={value}>
-      <div className="min-h-screen w-full overflow-x-hidden text-slate-800 dark:text-slate-100">
+      <div className="flex h-[100dvh] min-h-0 w-full flex-col overflow-hidden overflow-x-hidden text-slate-800 dark:text-slate-100">
         {showNav ? (
-          <header className="relative z-40 border-b border-indigo-100 bg-white/70 backdrop-blur dark:border-white/10 dark:bg-slate-900/60">
-            <div className="mx-auto grid w-full max-w-6xl items-center gap-4 px-4 py-3 md:grid-cols-[auto_1fr_auto]">
+          <header className="relative z-40 shrink-0 border-b border-indigo-100 bg-white/70 backdrop-blur dark:border-white/10 dark:bg-slate-900/60">
+            <div className="mx-auto grid w-full max-w-6xl items-center gap-2 px-3 py-2 md:grid-cols-[auto_1fr_auto]">
               <div className="flex items-center gap-2">
                 <CashLogo size={30} />
                 <div className="bg-gradient-to-r from-indigo-600 to-sky-500 bg-clip-text text-lg font-bold text-transparent">
@@ -283,7 +283,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               </div>
 
               <nav className="flex justify-center">
-                <div className="flex flex-wrap items-center justify-center gap-8">
+                <div className="flex flex-wrap items-center justify-center gap-5">
                   <NavLink href="/categories" label="Categories" active={pathname === "/categories"} />
                   <NavLink href="/entries" label="Entries" active={pathname === "/entries"} />
                   <NavLink href="/reports" label="Reports" active={pathname === "/reports"} />
@@ -374,7 +374,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             </div>
           </header>
         ) : null}
-        <main className="mx-auto w-full max-w-6xl px-4 py-6">{children}</main>
+        <main className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden px-3 py-2">{children}</main>
       </div>
     </AuthContext.Provider>
   );

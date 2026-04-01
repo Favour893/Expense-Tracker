@@ -20,7 +20,7 @@ export function IncomeExpenseTabs({ value, onChange, panelId, incomeCount, expen
 
   return (
     <div
-      className={`grid grid-cols-2 gap-3 ${className}`}
+      className={`grid grid-cols-2 gap-2 ${className}`}
       role="tablist"
       aria-label="Income or expenses"
     >
@@ -30,7 +30,7 @@ export function IncomeExpenseTabs({ value, onChange, panelId, incomeCount, expen
         id={incomeTabId}
         aria-controls={panelId}
         aria-selected={value === "income"}
-        className={`min-h-[3.25rem] rounded-xl border-2 px-3 py-3 text-center text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 ${
+        className={`min-h-[2.85rem] rounded-xl border-2 px-3 py-2.5 text-center text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 ${
           value === "income"
             ? "border-emerald-600 bg-emerald-600 text-white shadow-md dark:border-emerald-500"
             : "border-slate-200 bg-white text-emerald-900 hover:border-emerald-400/60 hover:bg-emerald-50/60 dark:border-white/15 dark:bg-slate-900 dark:text-emerald-200 dark:hover:bg-emerald-500/15"
@@ -45,7 +45,7 @@ export function IncomeExpenseTabs({ value, onChange, panelId, incomeCount, expen
         id={expenseTabId}
         aria-controls={panelId}
         aria-selected={value === "expense"}
-        className={`min-h-[3.25rem] rounded-xl border-2 px-3 py-3 text-center text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 ${
+        className={`min-h-[2.85rem] rounded-xl border-2 px-3 py-2.5 text-center text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 ${
           value === "expense"
             ? "border-rose-600 bg-rose-600 text-white shadow-md dark:border-rose-500"
             : "border-slate-200 bg-white text-rose-900 hover:border-rose-400/60 hover:bg-rose-50/60 dark:border-white/15 dark:bg-slate-900 dark:text-rose-200 dark:hover:bg-rose-500/15"

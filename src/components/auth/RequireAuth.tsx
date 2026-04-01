@@ -16,7 +16,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="mx-auto w-full max-w-6xl px-4 py-6">
+      <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
         <PageLoadingShimmer label="Loading session" />
       </div>
     );

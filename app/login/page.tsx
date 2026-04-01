@@ -132,32 +132,34 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="et-card mx-auto max-w-2xl">
-      <div className="flex items-center gap-3">
-        <CashLogo size={38} />
-        <h1 className="bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-500 bg-clip-text text-3xl font-extrabold text-transparent">Expense Tracker</h1>
-      </div>
-      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Track income, every expense, and generate monthly reports.</p>
-      <div className="mt-4 inline-flex rounded-xl border border-indigo-100 bg-indigo-50/70 p-1 dark:border-white/10 dark:bg-white/5">
-        <button
-          className={`rounded-lg px-3 py-2 text-sm ${mode === "signin" ? "bg-white text-slate-900 shadow dark:bg-slate-800 dark:text-white" : "text-slate-600 dark:text-slate-300"}`}
-          type="button"
-          onClick={() => setMode("signin")}
-        >
-          Sign in
-        </button>
-        <button
-          className={`rounded-lg px-3 py-2 text-sm ${mode === "signup" ? "bg-white text-slate-900 shadow dark:bg-slate-800 dark:text-white" : "text-slate-600 dark:text-slate-300"}`}
-          type="button"
-          onClick={() => setMode("signup")}
-        >
-          Create account
-        </button>
-      </div>
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden px-2 py-2">
+      <div className="et-card mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col overflow-hidden">
+        <div className="flex shrink-0 items-center gap-3">
+          <CashLogo size={38} />
+          <h1 className="bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-500 bg-clip-text text-3xl font-extrabold text-transparent">Expense Tracker</h1>
+        </div>
+        <p className="mt-2 shrink-0 text-sm text-slate-600 dark:text-slate-300">Track income, every expense, and generate monthly reports.</p>
+        <div className="mt-4 inline-flex shrink-0 rounded-xl border border-indigo-100 bg-indigo-50/70 p-1 dark:border-white/10 dark:bg-white/5">
+          <button
+            className={`rounded-lg px-3 py-2 text-sm ${mode === "signin" ? "bg-white text-slate-900 shadow dark:bg-slate-800 dark:text-white" : "text-slate-600 dark:text-slate-300"}`}
+            type="button"
+            onClick={() => setMode("signin")}
+          >
+            Sign in
+          </button>
+          <button
+            className={`rounded-lg px-3 py-2 text-sm ${mode === "signup" ? "bg-white text-slate-900 shadow dark:bg-slate-800 dark:text-white" : "text-slate-600 dark:text-slate-300"}`}
+            type="button"
+            onClick={() => setMode("signup")}
+          >
+            Create account
+          </button>
+        </div>
 
-      <div className="mt-6 grid gap-4">
+        <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
+          <div className="grid gap-3">
         {mode === "signup" ? (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2">
             <label className="grid gap-2">
               <span className="text-sm text-slate-600 dark:text-slate-300">First name <span className="text-red-500">*</span></span>
               <input className="et-input" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
@@ -270,6 +272,8 @@ export default function LoginPage() {
           <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">
             By continuing, you agree to use your own data only. (MVP: no sharing/collaboration.)
           </p>
+        </div>
+          </div>
         </div>
       </div>
     </div>

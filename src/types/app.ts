@@ -15,7 +15,6 @@ export type Transaction = {
   amount: number;
   type: TransactionType;
   categoryId: string;
-  merchantOrPayee?: string;
   description?: string;
   notes?: string;
   monthKey: string;

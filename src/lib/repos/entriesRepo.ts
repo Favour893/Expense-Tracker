@@ -19,7 +19,6 @@ export type TransactionCreateInput = {
   amount: number;
   type: TransactionType;
   categoryId: string;
-  merchantOrPayee?: string;
   description?: string;
   notes?: string;
   monthKey: string;

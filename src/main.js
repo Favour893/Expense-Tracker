@@ -234,7 +234,6 @@ function renderTransactionsList(transactions, categories) {
         </div>
         <div style="text-align:right;">
           <div class="big" style="font-size:18px;">${amountStr}</div>
-          <div class="muted" style="margin-top:6px;">${t.merchantOrPayee ? String(t.merchantOrPayee) : ""}</div>
         </div>
       </div>
       <div class="row" style="margin-top:10px;">
@@ -577,7 +576,6 @@ function wireActions() {
     const dateStr = el("tx-date").value;
     const amount = Number(el("tx-amount").value);
     const categoryId = el("tx-category").value;
-    const merchantOrPayee = el("tx-merchant").value.trim();
     const description = el("tx-description").value.trim();
 
     if (!dateStr || !Number.isFinite(amount) || !categoryId) return;
@@ -597,7 +595,6 @@ function wireActions() {
       amount: Math.abs(amount),
       type: category.type,
       categoryId,
-      merchantOrPayee,
       description,
       createdAt: serverTimestamp()
     });

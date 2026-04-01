@@ -111,7 +111,7 @@ function Categories() {
   }
 
   return (
-    <div className="mx-auto flex h-[100dvh] max-w-6xl min-h-0 flex-col gap-4 overflow-hidden px-4 py-4 sm:gap-5 sm:py-6">
+    <div className="flex h-full min-h-0 w-full flex-col gap-2 overflow-hidden sm:gap-3">
       <div className="shrink-0">
         <h1 className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">Categories</h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Create income/expense categories so every entry has a clear purpose.</p>
@@ -124,7 +124,7 @@ function Categories() {
       ) : (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="et-card flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="flex shrink-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-lg font-semibold">Your categories</h2>
               <button
                 type="button"
@@ -136,7 +136,7 @@ function Categories() {
               </button>
             </div>
 
-            <div className="mt-4 flex shrink-0 flex-col gap-2 sm:flex-row">
+            <div className="mt-2 flex shrink-0 flex-col gap-2 sm:flex-row">
               <input
                 className="h-11 flex-1 rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5"
                 placeholder="Search category name or type"
@@ -160,11 +160,11 @@ function Categories() {
             </datalist>
 
             {!categories.length ? (
-              <div className="mt-4 min-h-0 flex-1 overflow-y-auto text-sm text-slate-600 dark:text-slate-300">
+              <div className="mt-2 min-h-0 flex-1 overflow-y-auto text-sm text-slate-600 dark:text-slate-300">
                 No categories yet. Use the add button above to create one.
               </div>
             ) : (
-              <div className="mt-4 flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+              <div className="mt-2 flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
                 <IncomeExpenseTabs
                   panelId={categoriesPanelId}
                   value={listTab}
@@ -184,7 +184,7 @@ function Categories() {
                   }
                 >
                   <h3 className="sr-only">{listTab === "income" ? "Income categories" : "Expense categories"}</h3>
-                  <div className="grid gap-3">
+                  <div className="grid gap-2">
                     {(listTab === "income" ? incomeCategories : expenseCategories).map((c) => (
                       <div key={c.id} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
                         <div className="flex items-start justify-between gap-3">
@@ -223,8 +223,8 @@ function Categories() {
 
       {showAddCategoryModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-3xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-slate-950">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="w-full max-w-3xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-white/10 dark:bg-slate-950">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Add category</h2>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Create a new category. The modal closes after save.</p>
@@ -238,8 +238,8 @@ function Categories() {
               </button>
             </div>
 
-            <form className="mt-6 grid gap-4" onSubmit={(e) => onAdd(e, () => setShowAddCategoryModal(false))}>
-              <div className="grid gap-4 sm:grid-cols-2">
+            <form className="mt-4 grid gap-3" onSubmit={(e) => onAdd(e, () => setShowAddCategoryModal(false))}>
+              <div className="grid gap-3 sm:grid-cols-2">
                 <label className="grid gap-2">
                   <span className="text-sm text-slate-600 dark:text-slate-300">Type <span className="text-red-500">*</span></span>
                   <select className="et-input" value={type} onChange={(e) => setType(e.target.value as CategoryType)} required>
