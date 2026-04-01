@@ -5,6 +5,7 @@ import { Timestamp } from "firebase/firestore";
 
 import { RequireAuth } from "../../src/components/auth/RequireAuth";
 import { useAuth } from "../../src/components/auth/AuthProvider";
+import { useNotifications } from "../../src/components/notifications/NotificationProvider";
 import type { Category, Transaction, TransactionType } from "../../src/types/app";
 import { createTransaction, deleteTransaction, listTransactionsByMonth } from "../../src/lib/repos/entriesRepo";
 import { listCategories } from "../../src/lib/repos/categoriesRepo";
@@ -42,6 +43,18 @@ function formatMoney(value: number, currency: string) {
   }
 }
 
+function formatAmountInput(rawValue: string) {
+  const normalized = rawValue.replace(/,/g, "");
+  if (normalized === "") return "";
+  if (!/^\d*([.]\d{0,2})?$/.test(normalized)) return null;
+
+  const [wholePart, decimalPart] = normalized.split(".");
+  const withCommas = (wholePart || "0").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  if (normalized.endsWith(".")) return `${withCommas}.`;
+  if (typeof decimalPart === "string") return `${withCommas}.${decimalPart}`;
+  return withCommas;
+}
+
 export default function EntriesPage() {
   return (
     <RequireAuth>
@@ -52,6 +65,7 @@ export default function EntriesPage() {
 
 function Entries() {
   const { user, profile } = useAuth();
+  const { notifySuccess, notifyError } = useNotifications();
   const uid = user?.uid;
   const currency = profile?.currency || "USD";
 
@@ -177,7 +191,7 @@ function Entries() {
 
       await createTransaction(uid, {
         date: txDate,
-        amount: Math.abs(Number(amount) || 0),
+        amount: Math.abs(Number(amount.replace(/,/g, "")) || 0),
         type: txType,
         categoryId: cat.id,
         merchantOrPayee: merchantOrPayee.trim() || undefined,
@@ -192,9 +206,12 @@ function Entries() {
       setAmount("0");
       setMerchantOrPayee("");
       setDescription("");
+      notifySuccess("Transaction successfully added.");
       if (onSuccess) onSuccess();
     } catch (e: any) {
-      setError(e?.message || String(e));
+      const message = e?.message || String(e);
+      setError(message);
+      notifyError(`Could not add transaction: ${message}`);
     } finally {
       setBusy(false);
     }
@@ -416,7 +433,8 @@ function Entries() {
                     }}
                     onChange={(e) => {
                       const next = e.target.value;
-                      if (next === "" || /^\d*([.]\d{0,2})?$/.test(next)) setAmount(next);
+                      const formatted = formatAmountInput(next);
+                      if (formatted !== null) setAmount(formatted);
                     }}
                   />
                 </label>

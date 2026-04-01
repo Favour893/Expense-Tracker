@@ -4,6 +4,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { RequireAuth } from "../../src/components/auth/RequireAuth";
 import { useAuth } from "../../src/components/auth/AuthProvider";
+import { useNotifications } from "../../src/components/notifications/NotificationProvider";
 import type { Category, CategoryType } from "../../src/types/app";
 import { createCategory, deleteCategory, listCategories } from "../../src/lib/repos/categoriesRepo";
 
@@ -17,6 +18,7 @@ export default function CategoriesPage() {
 
 function Categories() {
   const { user } = useAuth();
+  const { notifySuccess, notifyError } = useNotifications();
   const uid = user?.uid;
 
   const [categories, setCategories] = useState<Category[]>([]);
@@ -78,9 +80,12 @@ function Categories() {
       await createCategory(uid, { name: trimmed, type });
       setName("");
       await refresh();
+      notifySuccess("Category successfully added.");
       if (onSuccess) onSuccess();
     } catch (e: any) {
-      setError(e?.message || String(e));
+      const message = e?.message || String(e);
+      setError(message);
+      notifyError(`Could not add category: ${message}`);
     } finally {
       setBusy(false);
     }
