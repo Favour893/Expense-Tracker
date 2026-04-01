@@ -24,6 +24,38 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 const THEME_KEY = "expense-tracker-theme";
 
+function firstProviderPhoto(user: User | null) {
+  if (!user?.providerData?.length) return null;
+  for (const provider of user.providerData) {
+    if (provider?.photoURL) return provider.photoURL;
+  }
+  return null;
+}
+
+function firstProviderDisplayName(user: User | null) {
+  if (!user?.providerData?.length) return null;
+  for (const provider of user.providerData) {
+    if (provider?.displayName) return provider.displayName;
+  }
+  return null;
+}
+
+function hashCode(input: string) {
+  let hash = 0;
+  for (let i = 0; i < input.length; i += 1) {
+    hash = (hash << 5) - hash + input.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(16).padStart(8, "0");
+}
+
+function gravatarFallbackUrl(email?: string | null) {
+  const normalized = String(email || "").trim().toLowerCase();
+  if (!normalized) return null;
+  // Email-based avatar fallback so every signed-in account has an image.
+  return `https://www.gravatar.com/avatar/${hashCode(normalized)}?d=identicon&s=128`;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [userDoc, setUserDoc] = useState<UserDocument | null>(null);
@@ -96,11 +128,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (u) {
         const existingUser = await getUserDocument(u.uid);
         const preferredCurrency = existingUser?.preferredCurrency || "USD";
-        const photoURL = u.photoURL || existingUser?.photoURL || null;
+        const providerPhoto = firstProviderPhoto(u);
+        const photoURL = u.photoURL || providerPhoto || existingUser?.photoURL || null;
+        const displayName = u.displayName || firstProviderDisplayName(u) || existingUser?.displayName || "";
 
         await saveUserDocument(u.uid, {
           email: u.email || "",
-          displayName: u.displayName || "",
+          displayName,
           photoURL,
           preferredCurrency
         });
@@ -180,6 +214,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const showNav = pathname !== "/login";
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const avatarRef = useRef<HTMLDivElement | null>(null);
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
 
   useEffect(() => {
     if (!dropdownOpen) return;
@@ -204,8 +239,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [dropdownOpen]);
 
-  const avatarLabel = user?.displayName || user?.email || "User";
-  const avatarSrc = user?.photoURL || userDoc?.photoURL || null;
+  const avatarLabel = user?.displayName || firstProviderDisplayName(user) || userDoc?.displayName || user?.email || userDoc?.email || "User";
+  const avatarCandidates = [
+    user?.photoURL,
+    firstProviderPhoto(user),
+    userDoc?.photoURL,
+    gravatarFallbackUrl(user?.email || userDoc?.email)
+  ].filter(Boolean) as string[];
+  const avatarSrc = avatarLoadFailed ? avatarCandidates[avatarCandidates.length - 1] || null : avatarCandidates[0] || null;
+
+  useEffect(() => {
+    setAvatarLoadFailed(false);
+  }, [user?.uid, user?.photoURL, userDoc?.photoURL, user?.email, userDoc?.email]);
   const initials = avatarLabel
     .split(" ")
     .map((p) => p.charAt(0).toUpperCase())
@@ -242,7 +287,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   aria-expanded={dropdownOpen}
                 >
                   {avatarSrc ? (
-                    <img src={avatarSrc} alt={avatarLabel} className="h-9 w-9 rounded-full object-cover" />
+                    <img
+                      src={avatarSrc}
+                      alt={avatarLabel}
+                      className="h-9 w-9 rounded-full object-cover"
+                      referrerPolicy="no-referrer"
+                      onError={() => setAvatarLoadFailed(true)}
+                    />
                   ) : (
                     <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{initials}</span>
                   )}
