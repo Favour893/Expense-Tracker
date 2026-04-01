@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { deleteUser, onAuthStateChanged, signOut, type User } from "firebase/auth";
 import Link from "next/link";
 import { mdiDelete, mdiLogout } from "@mdi/js";
@@ -14,9 +14,11 @@ import { CashLogo } from "../branding/CashLogo";
 type AuthContextValue = {
   user: User | null;
   profile: UserProfile | null;
+  userDoc: UserDocument | null;
   loading: boolean;
   signOutUser: () => Promise<void>;
   deleteAccount: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
   theme: "light" | "dark";
   toggleTheme: () => void;
 };
@@ -151,10 +153,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsub();
   }, []);
 
+  const refreshProfile = useCallback(async () => {
+    const u = auth.currentUser;
+    if (!u) return;
+    const [p, doc] = await Promise.all([getProfile(u.uid), getUserDocument(u.uid)]);
+    setProfile(p);
+    setUserDoc(doc);
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       profile,
+      userDoc,
       loading,
       signOutUser: async () => {
         const ok = window.confirm("Are you sure you want to sign out?");
@@ -206,9 +217,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTheme(next);
         localStorage.setItem(THEME_KEY, next);
         document.documentElement.classList.toggle("dark", next === "dark");
-      }
+      },
+      refreshProfile
     }),
-    [user, profile, loading, router, theme]
+    [user, profile, userDoc, loading, router, theme, refreshProfile]
   );
 
   const showNav = pathname !== "/login";

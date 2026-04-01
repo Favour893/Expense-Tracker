@@ -9,6 +9,8 @@ import { useNotifications } from "../../src/components/notifications/Notificatio
 import type { Category, Transaction, TransactionType } from "../../src/types/app";
 import { createTransaction, deleteTransaction, listTransactionsByMonth } from "../../src/lib/repos/entriesRepo";
 import { listCategories } from "../../src/lib/repos/categoriesRepo";
+import { CURRENCIES } from "../../src/lib/constants/countries";
+import { getUserDocument, saveProfile, saveUserDocument } from "../../src/lib/repos/profileRepo";
 
 function monthKeyFromDateInput(dateStr: string) {
   const [y, m] = String(dateStr || "").split("-");
@@ -64,10 +66,10 @@ export default function EntriesPage() {
 }
 
 function Entries() {
-  const { user, profile } = useAuth();
+  const { user, profile, userDoc, refreshProfile } = useAuth();
   const { notifySuccess, notifyError } = useNotifications();
   const uid = user?.uid;
-  const currency = profile?.currency || "USD";
+  const currency = profile?.currency || userDoc?.preferredCurrency || "USD";
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -91,6 +93,7 @@ function Entries() {
   const [description, setDescription] = useState<string>("");
   const [searchText, setSearchText] = useState<string>("");
   const [showAddTransactionModal, setShowAddTransactionModal] = useState(false);
+  const [currencyBusy, setCurrencyBusy] = useState(false);
 
   const typedCategories = useMemo(
     () => categories.filter((c) => c.isActive !== false && c.type === entryType),
@@ -217,6 +220,29 @@ function Entries() {
     }
   }
 
+  async function onCurrencyChange(next: string) {
+    if (!uid || !user) return;
+    setCurrencyBusy(true);
+    try {
+      const existing = await getUserDocument(uid);
+      await saveUserDocument(uid, {
+        email: user.email || existing?.email || "",
+        displayName: existing?.displayName || user.displayName || "",
+        photoURL: existing?.photoURL ?? user.photoURL ?? null,
+        preferredCurrency: next
+      });
+      if (profile) {
+        await saveProfile(uid, { ...profile, currency: next });
+      }
+      await refreshProfile();
+      notifySuccess("Currency updated.");
+    } catch (e: any) {
+      notifyError(e?.message || String(e));
+    } finally {
+      setCurrencyBusy(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col gap-6">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
@@ -228,32 +254,50 @@ function Entries() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="et-card flex flex-col min-h-0 overflow-hidden">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <h2 className="text-lg font-semibold">Transactions</h2>
-              <button
-                type="button"
-                className="et-btn-secondary inline-flex items-center gap-2"
-                onClick={() => setShowAddTransactionModal(true)}
-              >
-                <span className="text-xl font-bold">+</span>
-                Add
-              </button>
+          <div className="flex flex-col gap-3">
+            <div>
+              <div className="flex flex-wrap items-center gap-3">
+                <h2 className="text-lg font-semibold">Transactions</h2>
+                <button
+                  type="button"
+                  className="et-btn-secondary inline-flex items-center gap-2"
+                  onClick={() => setShowAddTransactionModal(true)}
+                >
+                  <span className="text-xl font-bold">+</span>
+                  Add
+                </button>
+              </div>
+              <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{filteredTransactions.length} items</div>
             </div>
-            <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{filteredTransactions.length} items</div>
-          </div>
 
-          <label className="ml-auto flex flex-col items-end gap-2 text-right text-sm text-slate-600 dark:text-slate-300">
-            Month
-            <input
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5 sm:w-auto"
-              type="month"
-              value={monthKey}
-              onChange={(e) => setMonthKey(e.target.value)}
-            />
-          </label>
-        </div>
+            <div className="ml-auto flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+              <label className="flex w-full flex-row flex-wrap items-center justify-end gap-4 text-sm text-slate-600 dark:text-slate-300 sm:w-auto">
+                <span className="shrink-0 font-medium">Select Month</span>
+                <input
+                  className="h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 dark:border-white/10 dark:bg-white/5 sm:w-auto sm:flex-initial"
+                  type="month"
+                  value={monthKey}
+                  onChange={(e) => setMonthKey(e.target.value)}
+                />
+              </label>
+              <label className="flex w-full flex-row flex-wrap items-center justify-end gap-4 text-sm text-slate-600 dark:text-slate-300 sm:w-auto">
+                <span className="shrink-0 font-medium">Currency</span>
+                <select
+                  className="et-input h-11 min-w-[10rem] sm:min-w-[12rem]"
+                  value={currency}
+                  disabled={currencyBusy}
+                  onChange={(e) => onCurrencyChange(e.target.value)}
+                  aria-label="Display currency for amounts"
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </div>
 
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
           <input

@@ -5,7 +5,7 @@ import { createUserWithEmailAndPassword, GoogleAuthProvider, OAuthProvider, getR
 import { mdiApple, mdiGoogle } from "@mdi/js";
 import { auth } from "../../src/lib/firebaseClient";
 import { useRouter } from "next/navigation";
-import { COUNTRIES, CURRENCIES, currencyFromCountry } from "../../src/lib/constants/countries";
+import { COUNTRIES, currencyFromCountry } from "../../src/lib/constants/countries";
 import { saveProfile, saveUserDocument } from "../../src/lib/repos/profileRepo";
 import { CashLogo } from "../../src/components/branding/CashLogo";
 
@@ -28,7 +28,6 @@ export default function LoginPage() {
   const [lastName, setLastName] = useState("");
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
-  const [currency, setCurrency] = useState("USD");
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,11 +66,12 @@ export default function LoginPage() {
           throw new Error("Use a stronger password: at least 8 chars with uppercase, lowercase, number, and punctuation.");
         }
         const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
+        const initialCurrency = currencyFromCountry(country);
         await saveUserDocument(cred.user.uid, {
           email: email.trim(),
           displayName: `${firstName.trim()} ${lastName.trim()}`,
           photoURL: null,
-          preferredCurrency: currency
+          preferredCurrency: initialCurrency
         });
         await saveProfile(cred.user.uid, {
           firstName: firstName.trim(),
@@ -79,7 +79,7 @@ export default function LoginPage() {
           lastName: lastName.trim(),
           country,
           city: city.trim(),
-          currency,
+          currency: initialCurrency,
           email: email.trim()
         });
       }
@@ -176,9 +176,7 @@ export default function LoginPage() {
                 className="et-input"
                 value={country}
                 onChange={(e) => {
-                  const code = e.target.value;
-                  setCountry(code);
-                  setCurrency(currencyFromCountry(code));
+                  setCountry(e.target.value);
                 }}
                 required>
                 <option value="">Select country</option>
@@ -192,16 +190,6 @@ export default function LoginPage() {
             <label className="grid gap-2">
               <span className="text-sm text-slate-600 dark:text-slate-300">City <span className="text-red-500">*</span></span>
               <input className="et-input" value={city} onChange={(e) => setCity(e.target.value)} required />
-            </label>
-            <label className="grid gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">Currency (auto from country, editable) <span className="text-red-500">*</span></span>
-              <select className="et-input" value={currency} onChange={(e) => setCurrency(e.target.value)} required>
-                {CURRENCIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
             </label>
           </div>
         ) : null}

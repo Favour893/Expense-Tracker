@@ -49,10 +49,10 @@ export default function ReportsPage() {
 }
 
 function Reports() {
-  const { user, profile } = useAuth();
+  const { user, profile, userDoc } = useAuth();
   const uid = user?.uid;
 
-  const currency = profile?.currency || "USD";
+  const currency = profile?.currency || userDoc?.preferredCurrency || "USD";
 
   const [monthKey, setMonthKey] = useState(() => currentMonthKey());
   const [categories, setCategories] = useState<Category[]>([]);
@@ -182,17 +182,15 @@ function Reports() {
 
   return (
     <div className="grid gap-6">
-      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3">
         <div>
           <h1 className="bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-500 bg-clip-text text-2xl font-bold text-transparent">Monthly Reports</h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Preview in the browser first, then export the same report as a PDF.</p>
         </div>
-        <div className="flex w-full justify-end sm:w-auto">
-          <label className="ml-auto flex flex-col items-end gap-2 text-right text-sm text-slate-600 dark:text-slate-300">
-            Month
-            <input className="et-input w-full sm:w-auto" type="month" value={monthKey} onChange={(e) => setMonthKey(e.target.value)} />
-          </label>
-        </div>
+        <label className="ml-auto flex w-full flex-row flex-wrap items-center justify-end gap-4 text-sm text-slate-600 dark:text-slate-300 sm:w-auto">
+          <span className="shrink-0 font-medium">Select Month</span>
+          <input className="et-input min-w-0 flex-1 sm:w-auto sm:flex-initial" type="month" value={monthKey} onChange={(e) => setMonthKey(e.target.value)} />
+        </label>
       </div>
 
       {error ? <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</div> : null}
