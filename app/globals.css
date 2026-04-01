@@ -163,6 +163,14 @@ body.pdf-export #report-root .report-month-label-pdf {
   display: inline !important;
 }
 
+/* Full narrative in PDF (mobile UI uses line-clamp in preview). */
+body.pdf-export #report-root .report-narrative-text {
+  -webkit-line-clamp: unset !important;
+  line-clamp: unset !important;
+  display: block !important;
+  overflow: visible !important;
+}
+
 body.pdf-export table.report-table th,
 body.pdf-export table.report-table td {
   color: #000000 !important;

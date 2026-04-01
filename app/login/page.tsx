@@ -156,7 +156,7 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <div className="mt-4 h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
+        <div className="mt-4 h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 [-webkit-overflow-scrolling:touch]">
           <div className="grid gap-3">
         {mode === "signup" ? (
           <div className="grid gap-3 sm:grid-cols-2">

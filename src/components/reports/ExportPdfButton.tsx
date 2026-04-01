@@ -5,11 +5,14 @@ import React, { useState } from "react";
 export function ExportPdfButton({
   monthKey,
   currency,
-  disabled
+  disabled,
+  buttonClassName = ""
 }: {
   monthKey: string;
   currency: string;
   disabled?: boolean;
+  /** Extra classes for the export button (e.g. compact mobile sizing). */
+  buttonClassName?: string;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +56,7 @@ export function ExportPdfButton({
     <div className="flex flex-col gap-2">
       <button
         type="button"
-        className="rounded-xl border border-slate-200 bg-white px-4 py-2 font-semibold hover:bg-slate-50 disabled:opacity-60 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+        className={`rounded-xl border border-slate-200 bg-white px-4 py-2 font-semibold hover:bg-slate-50 disabled:opacity-60 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 ${buttonClassName}`.trim()}
         onClick={onExport}
         disabled={busy || disabled}
       >

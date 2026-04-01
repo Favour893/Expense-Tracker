@@ -120,12 +120,12 @@ function Categories() {
       </div>
 
       {initialLoad ? (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
           <PageLoadingShimmer label="Loading categories" />
         </div>
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="et-card flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
+          <div className="et-card flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
             <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-lg font-semibold">Your categories</h2>
               <button
@@ -167,7 +167,7 @@ function Categories() {
                 No categories yet. Use the add button above to create one.
               </div>
             ) : (
-              <div className="mt-2 flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+              <div className="mt-2 flex h-0 min-h-0 flex-1 flex-col gap-2 overflow-hidden">
                 <IncomeExpenseTabs
                   panelId={categoriesPanelId}
                   value={listTab}
@@ -182,8 +182,8 @@ function Categories() {
                   aria-labelledby={`${categoriesPanelId}-tab-${listTab}`}
                   className={
                     listTab === "income"
-                      ? "min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/5"
-                      : "min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-rose-200 bg-rose-50/40 p-3 dark:border-rose-500/30 dark:bg-rose-500/5"
+                      ? "h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/5 [-webkit-overflow-scrolling:touch]"
+                      : "h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-rose-200 bg-rose-50/40 p-3 dark:border-rose-500/30 dark:bg-rose-500/5 [-webkit-overflow-scrolling:touch]"
                   }
                 >
                   <h3 className="sr-only">{listTab === "income" ? "Income categories" : "Expense categories"}</h3>

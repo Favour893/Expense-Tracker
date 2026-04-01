@@ -27,29 +27,31 @@ export function ReportPreview({
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-md shadow-indigo-100/40 dark:border-white/10 dark:bg-white/5 dark:shadow-none sm:p-5">
-      <h2 className="text-lg font-bold text-indigo-700 dark:text-indigo-300 sm:text-xl">
+    <div className="rounded-xl border border-slate-200 bg-white p-2 shadow-md shadow-indigo-100/40 dark:border-white/10 dark:bg-white/5 dark:shadow-none sm:rounded-2xl sm:p-5">
+      <h2 className="text-sm font-bold leading-tight text-indigo-700 dark:text-indigo-300 sm:text-xl">
         <span className="report-month-label-screen">{`Report for ${monthKey}`}</span>
         <span className="report-month-label-pdf">{`Report for ${formatReportMonthLabel(monthKey)}`}</span>
       </h2>
-      <div className="mt-3 grid grid-cols-1 gap-2 sm:mt-4 sm:grid-cols-3 sm:gap-3">
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 dark:border-white/10 dark:bg-white/5 sm:p-3">
-          <div className="text-xs text-slate-600 dark:text-slate-300">Total income</div>
-          <div className="mt-0.5 text-xl font-bold sm:mt-1 sm:text-2xl">{formatMoney(incomeTotal)}</div>
+      <div className="mt-2 grid grid-cols-3 gap-1.5 sm:mt-4 sm:gap-3">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-1.5 dark:border-white/10 dark:bg-white/5 sm:rounded-xl sm:p-3">
+          <div className="text-[0.65rem] font-medium leading-tight text-slate-600 dark:text-slate-300 sm:text-xs">Income</div>
+          <div className="mt-0.5 break-words text-[0.7rem] font-bold leading-tight sm:mt-1 sm:text-2xl">{formatMoney(incomeTotal)}</div>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 dark:border-white/10 dark:bg-white/5 sm:p-3">
-          <div className="text-xs text-slate-600 dark:text-slate-300">Total expenses</div>
-          <div className="mt-0.5 text-xl font-bold sm:mt-1 sm:text-2xl">{formatMoney(expensesTotal)}</div>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-1.5 dark:border-white/10 dark:bg-white/5 sm:rounded-xl sm:p-3">
+          <div className="text-[0.65rem] font-medium leading-tight text-slate-600 dark:text-slate-300 sm:text-xs">Expenses</div>
+          <div className="mt-0.5 break-words text-[0.7rem] font-bold leading-tight sm:mt-1 sm:text-2xl">{formatMoney(expensesTotal)}</div>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 dark:border-white/10 dark:bg-white/5 sm:p-3">
-          <div className="text-xs text-slate-600 dark:text-slate-300">Net</div>
-          <div className="mt-0.5 text-xl font-bold sm:mt-1 sm:text-2xl">{formatMoney(net)}</div>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-1.5 dark:border-white/10 dark:bg-white/5 sm:rounded-xl sm:p-3">
+          <div className="text-[0.65rem] font-medium leading-tight text-slate-600 dark:text-slate-300 sm:text-xs">Net</div>
+          <div className="mt-0.5 break-words text-[0.7rem] font-bold leading-tight sm:mt-1 sm:text-2xl">{formatMoney(net)}</div>
         </div>
       </div>
 
-      <div className="mt-3 sm:mt-5">
-        <h3 className="text-base font-semibold sm:text-lg">Narrative</h3>
-        <p className="mt-1.5 whitespace-pre-wrap text-xs text-slate-700 dark:text-slate-200 sm:mt-2 sm:text-sm">
+      <div className="mt-2 sm:mt-5">
+        <h3 className="text-xs font-semibold sm:text-lg">Narrative</h3>
+        <p
+          className="report-narrative-text mt-1 line-clamp-4 whitespace-pre-wrap text-[0.7rem] leading-snug text-slate-700 dark:text-slate-200 sm:mt-2 md:line-clamp-none md:text-sm"
+        >
           {narrativeText || "—"}
         </p>
       </div>
