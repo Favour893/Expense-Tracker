@@ -111,10 +111,10 @@ function Categories() {
   }
 
   return (
-    <div className="flex h-0 min-h-0 w-full min-w-0 flex-1 flex-col gap-1.5 overflow-hidden sm:gap-2">
+    <div className="flex h-0 min-h-0 w-full min-w-0 flex-1 flex-col gap-1 overflow-hidden sm:gap-2">
       <div className="shrink-0">
-        <h1 className="text-xl font-bold text-indigo-700 dark:text-indigo-300 sm:text-2xl">Categories</h1>
-        <p className="mt-0.5 line-clamp-2 text-xs text-slate-600 dark:text-slate-300 sm:mt-1 sm:text-sm">
+        <h1 className="text-lg font-bold text-indigo-700 dark:text-indigo-300 sm:text-2xl">Categories</h1>
+        <p className="hidden mt-0.5 line-clamp-2 text-xs text-slate-600 dark:text-slate-300 sm:block sm:mt-1 sm:text-sm">
           Create income/expense categories so every entry has a clear purpose.
         </p>
       </div>
@@ -125,20 +125,20 @@ function Categories() {
         </div>
       ) : (
         <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
-          <div className="et-card flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
-            <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="text-lg font-semibold">Your categories</h2>
+          <div className="et-card !p-2 sm:!p-3 flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
+            <div className="flex shrink-0 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-base font-semibold">Your categories</h2>
               <button
                 type="button"
-                className="et-btn-secondary inline-flex items-center gap-2"
+                className="et-btn-secondary inline-flex items-center gap-2 !min-h-10 !px-3 !py-2 text-sm"
                 onClick={() => setShowAddCategoryModal(true)}
               >
-                <span className="text-xl font-bold">+</span>
+                <span className="text-lg font-bold">+</span>
                 Add category
               </button>
             </div>
 
-            <div className="mt-2 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-stretch">
+            <div className="mt-2 flex shrink-0 flex-col gap-1 sm:flex-row sm:items-stretch">
               <input
                 className="et-search flex-1"
                 placeholder="Search categories"
@@ -149,7 +149,7 @@ function Categories() {
               />
               <button
                 type="button"
-                className="et-btn-secondary min-w-[5.5rem] shrink-0 sm:w-auto"
+                className="et-btn-secondary min-w-[5.5rem] shrink-0 sm:w-auto !min-h-10 !px-3 !py-2 text-sm"
                 onClick={() => setSearchText("")}
               >
                 Clear
@@ -167,7 +167,7 @@ function Categories() {
                 No categories yet. Use the add button above to create one.
               </div>
             ) : (
-              <div className="mt-2 flex h-0 min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+              <div className="mt-2 flex h-0 min-h-0 flex-1 flex-col gap-1 overflow-hidden">
                 <IncomeExpenseTabs
                   panelId={categoriesPanelId}
                   value={listTab}
@@ -182,21 +182,21 @@ function Categories() {
                   aria-labelledby={`${categoriesPanelId}-tab-${listTab}`}
                   className={
                     listTab === "income"
-                      ? "h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/5 [-webkit-overflow-scrolling:touch]"
-                      : "h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-rose-200 bg-rose-50/40 p-3 dark:border-rose-500/30 dark:bg-rose-500/5 [-webkit-overflow-scrolling:touch]"
+                      ? "h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-emerald-200 bg-emerald-50/40 p-2 sm:p-3 dark:border-emerald-500/30 dark:bg-emerald-500/5 [-webkit-overflow-scrolling:touch]"
+                      : "h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-rose-200 bg-rose-50/40 p-2 sm:p-3 dark:border-emerald-500/30 dark:bg-rose-500/5 [-webkit-overflow-scrolling:touch]"
                   }
                 >
                   <h3 className="sr-only">{listTab === "income" ? "Income categories" : "Expense categories"}</h3>
                   <div className="grid gap-2">
                     {(listTab === "income" ? incomeCategories : expenseCategories).map((c) => (
-                      <div key={c.id} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
-                        <div className="flex items-start justify-between gap-3">
+                      <div key={c.id} className="rounded-xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-white/5">
+                        <div className="flex items-start justify-between gap-2">
                           <div>
                             <div className="font-semibold">{c.name}</div>
                           </div>
                           <button
                             type="button"
-                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                            className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
                             onClick={async () => {
                               if (!uid) return;
                               const ok = confirm("Delete category \"" + c.name + "\"?");
@@ -232,13 +232,6 @@ function Categories() {
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Add category</h2>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Create a new category. The modal closes after save.</p>
               </div>
-              <button
-                type="button"
-                className="et-btn-secondary inline-flex items-center gap-2"
-                onClick={() => setShowAddCategoryModal(false)}
-              >
-                Close
-              </button>
             </div>
 
             <form className="mt-4 grid gap-3" onSubmit={(e) => onAdd(e, () => setShowAddCategoryModal(false))}>

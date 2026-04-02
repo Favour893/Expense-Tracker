@@ -263,10 +263,10 @@ function Entries() {
   }
 
   return (
-    <div className="flex h-0 min-h-0 w-full min-w-0 flex-1 flex-col gap-1.5 overflow-hidden sm:gap-2">
+    <div className="flex h-0 min-h-0 w-full min-w-0 flex-1 flex-col gap-1 overflow-hidden sm:gap-2">
       <div className="shrink-0">
-        <h1 className="text-xl font-bold text-indigo-700 dark:text-indigo-300 sm:text-2xl">Entries</h1>
-        <p className="mt-0.5 line-clamp-2 text-xs text-slate-600 dark:text-slate-300 sm:mt-1 sm:text-sm">
+        <h1 className="text-lg font-bold text-indigo-700 dark:text-indigo-300 sm:text-2xl">Entries</h1>
+        <p className="hidden mt-0.5 line-clamp-2 text-xs text-slate-600 dark:text-slate-300 sm:block sm:mt-1 sm:text-sm">
           Add every income and expense, and keep it categorized.
         </p>
       </div>
@@ -277,28 +277,28 @@ function Entries() {
         </div>
       ) : (
         <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
-          <div className="et-card flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
-            <div className="flex shrink-0 flex-col gap-2">
+          <div className="et-card !p-2 sm:!p-3 flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
+            <div className="flex shrink-0 flex-col gap-0.5">
               <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-lg font-semibold">Transactions</h2>
+                <div className="flex flex-wrap items-center gap-0.5">
+                  <h2 className="text-base font-semibold">Transactions</h2>
                   <button
                     type="button"
-                    className="et-btn-secondary inline-flex items-center gap-2"
+                    className="et-btn-secondary inline-flex items-center gap-2 !min-h-10 !px-3 !py-2 text-sm"
                     onClick={() => setShowAddTransactionModal(true)}
                   >
-                    <span className="text-xl font-bold">+</span>
+                    <span className="text-lg font-bold">+</span>
                     Add
                   </button>
                 </div>
-                <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{filteredTransactions.length} items</div>
+                <div className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">{filteredTransactions.length} items</div>
               </div>
 
-              <div className="ml-auto flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+              <div className="ml-auto flex w-full flex-col items-stretch gap-0.5 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
                 <label className="flex w-full flex-row flex-wrap items-center justify-end gap-2 text-xs text-slate-600 dark:text-slate-300 sm:w-auto sm:text-sm">
                   <span className="shrink-0 font-medium">Month</span>
                   <input
-                    className="et-input min-w-0 flex-1 sm:w-auto sm:flex-initial sm:min-w-[10rem]"
+                    className="et-input min-w-0 flex-1 !min-h-[2.5rem] !px-3 !py-2 text-sm sm:w-auto sm:flex-initial sm:min-w-[10rem]"
                     type="month"
                     value={monthKey}
                     onChange={(e) => setMonthKey(e.target.value)}
@@ -307,7 +307,7 @@ function Entries() {
                 <label className="flex w-full flex-row flex-wrap items-center justify-end gap-2 text-xs text-slate-600 dark:text-slate-300 sm:w-auto sm:text-sm">
                   <span className="shrink-0 font-medium">Currency</span>
                   <select
-                    className="et-input min-w-[10rem] sm:min-w-[12rem]"
+                    className="et-input min-w-[10rem] !min-h-[2.5rem] !px-3 !py-2 text-sm sm:min-w-[12rem]"
                     value={currency}
                     disabled={currencyBusy}
                     onChange={(e) => onCurrencyChange(e.target.value)}
@@ -323,9 +323,9 @@ function Entries() {
               </div>
             </div>
 
-            <div className="mt-2 flex shrink-0 flex-col gap-2 sm:flex-row sm:items-stretch">
+            <div className="mt-1 flex shrink-0 flex-col gap-0.5 sm:flex-row sm:items-stretch">
               <input
-                className="et-search flex-1"
+                className="et-search flex-1 !min-h-[2.5rem] !px-3 !py-2 text-sm"
                 placeholder="Search transactions"
                 title="Search by category, description, date or amount"
                 list="entry-search-suggestions"
@@ -334,7 +334,7 @@ function Entries() {
               />
               <button
                 type="button"
-                className="et-btn-secondary min-w-[5.5rem] shrink-0 sm:w-auto"
+                className="et-btn-secondary min-w-[5.5rem] shrink-0 sm:w-auto !min-h-10 !px-3 !py-2 text-sm"
                 onClick={() => setSearchText("")}
               >
                 Clear
@@ -347,7 +347,7 @@ function Entries() {
               ))}
             </datalist>
 
-            <div className="mt-2 flex h-0 min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+            <div className="mt-1 flex h-0 min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
               <IncomeExpenseTabs
                 panelId={entriesPanelId}
                 value={listTab}
@@ -362,8 +362,8 @@ function Entries() {
                 aria-labelledby={`${entriesPanelId}-tab-${listTab}`}
                 className={
                   listTab === "income"
-                    ? "h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-emerald-200 bg-emerald-50/40 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/5 [-webkit-overflow-scrolling:touch]"
-                    : "h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-rose-200 bg-rose-50/40 p-3 dark:border-rose-500/30 dark:bg-rose-500/5 [-webkit-overflow-scrolling:touch]"
+                    ? "h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-emerald-200 bg-emerald-50/40 p-1.5 sm:p-3 dark:border-emerald-500/30 dark:bg-emerald-500/5 [-webkit-overflow-scrolling:touch]"
+                    : "h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-xl border border-rose-200 bg-rose-50/40 p-1.5 sm:p-3 dark:border-rose-500/30 dark:bg-rose-500/5 [-webkit-overflow-scrolling:touch]"
                 }
               >
                 <h3 className="sr-only">{listTab === "income" ? "Income entries" : "Expense entries"}</h3>
@@ -373,19 +373,19 @@ function Entries() {
                     const sign = t.type === "income" ? "+" : "-";
                     const amountStr = `${sign} ${formatMoney(Number(t.amount || 0), currency)}`;
                     return (
-                      <div key={t.id} className="rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
-                        <div className="flex items-start justify-between gap-3">
+                      <div key={t.id} className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-white/10 dark:bg-white/5">
+                        <div className="flex items-start justify-between gap-2">
                           <div>
                             <div className="font-semibold">{catName}</div>
-                            <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{formatUkDate(t.date)}</div>
+                            <div className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">{formatUkDate(t.date)}</div>
                           </div>
                           <div className="text-right">
-                            <div className="text-base font-bold">{amountStr}</div>
+                            <div className="text-sm font-bold">{amountStr}</div>
                             {t.description ? <div className="mt-1 text-xs text-slate-600 dark:text-slate-300">{t.description}</div> : null}
-                            <div className="mt-3">
+                            <div className="mt-2">
                               <button
                                 type="button"
-                                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                                className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
                                 onClick={async () => {
                                   if (!uid) return;
                                   const ok = confirm("Delete this entry?");
@@ -423,13 +423,6 @@ function Entries() {
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Add transaction</h2>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Enter a new income or expense item. The modal will close after you save.</p>
               </div>
-              <button
-                type="button"
-                className="et-btn-secondary inline-flex items-center gap-2"
-                onClick={() => setShowAddTransactionModal(false)}
-              >
-                Close
-              </button>
             </div>
 
             <form className="mt-4 grid gap-3" onSubmit={(e) => onAdd(e, () => setShowAddTransactionModal(false))}>

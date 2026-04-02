@@ -403,32 +403,48 @@ function Reports() {
                 </div>
               ) : (
                 <div className="max-w-full min-w-0 overflow-x-auto rounded-lg border border-slate-200 dark:border-white/10 sm:rounded-xl">
-                  <table className="min-w-full text-center text-xs sm:text-sm">
+                  <table className="w-max min-w-full table-auto text-center text-xs sm:text-sm">
                     <thead className="bg-slate-50 text-slate-700 dark:bg-white/5 dark:text-slate-200">
                       <tr>
-                        <th className="px-2 py-1.5 font-semibold sm:px-3 sm:py-2">Date</th>
-                        <th className="px-2 py-1.5 font-semibold sm:px-3 sm:py-2">Category</th>
-                        <th className="px-2 py-1.5 font-semibold sm:px-3 sm:py-2">Amount</th>
+                        <th className="min-w-[5.5rem] whitespace-nowrap px-2 py-1.5 font-semibold sm:px-3 sm:py-2">
+                          Date
+                        </th>
+                        <th className="min-w-[7.5rem] whitespace-nowrap px-2 py-1.5 font-semibold sm:px-3 sm:py-2">
+                          Category
+                        </th>
+                        <th className="min-w-[7.75rem] whitespace-nowrap px-2 py-1.5 font-semibold sm:px-3 sm:py-2">
+                          Amount
+                        </th>
                         <th
-                          className="px-2 py-1.5 font-semibold sm:px-3 sm:py-2"
+                          className="min-w-[4.25rem] whitespace-nowrap px-2 py-1.5 font-semibold sm:px-3 sm:py-2"
                           title="Share of total expense amount in the current filtered list"
                         >
                           %
                         </th>
-                        <th className="px-2 py-1.5 font-semibold sm:px-3 sm:py-2">Description</th>
+                        <th className="min-w-[12rem] whitespace-nowrap px-2 py-1.5 font-semibold sm:px-3 sm:py-2">
+                          Description
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {pagedRows.map((row) => (
                         <tr key={row.id} className="border-t border-slate-200/80 dark:border-white/10">
-                          <td className="px-2 py-1.5 sm:px-3 sm:py-2">{row.date}</td>
-                          <td className="px-2 py-1.5 sm:px-3 sm:py-2">{row.category}</td>
-                          <td className="px-2 py-1.5 font-medium sm:px-3 sm:py-2">{formatMoney(row.amount, currency)}</td>
-                          <td className="px-2 py-1.5 tabular-nums text-slate-700 dark:text-slate-200 sm:px-3 sm:py-2">
+                          <td className="min-w-[5.5rem] whitespace-nowrap px-2 py-1.5 sm:px-3 sm:py-2">
+                            {row.date}
+                          </td>
+                          <td className="min-w-[7.5rem] whitespace-nowrap px-2 py-1.5 sm:px-3 sm:py-2">
+                            {row.category}
+                          </td>
+                          <td className="min-w-[7.75rem] whitespace-nowrap px-2 py-1.5 font-medium sm:px-3 sm:py-2">
+                            {formatMoney(row.amount, currency)}
+                          </td>
+                          <td className="min-w-[4.25rem] whitespace-nowrap px-2 py-1.5 tabular-nums text-slate-700 dark:text-slate-200 sm:px-3 sm:py-2">
                             {row.pctOfTotal.toFixed(1)}%
                           </td>
-                          <td className="max-w-[8rem] truncate px-2 py-1.5 sm:max-w-none sm:whitespace-normal sm:px-3 sm:py-2">
-                            {row.description || "-"}
+                          <td className="min-w-[12rem] whitespace-nowrap px-2 py-1.5 sm:px-3 sm:py-2">
+                            <span className="block max-w-[16rem] truncate">
+                              {row.description || "-"}
+                            </span>
                           </td>
                         </tr>
                       ))}

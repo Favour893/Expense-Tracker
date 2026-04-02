@@ -89,22 +89,22 @@ body {
 /* Make native dropdowns readable in both light/dark themes. */
 select {
   color: #0f172a;
-  background-color: #ffffff;
+  background-color: #eef2ff; /* indigo-50 */
 }
 
 select option {
   color: #0f172a;
-  background-color: #ffffff;
+  background-color: #eef2ff; /* indigo-50 */
 }
 
 .dark select {
   color: #e2e8f0;
-  background-color: #0f172a;
+  background-color: rgba(99, 102, 241, 0.12); /* indigo-500/12 */
 }
 
 .dark select option {
   color: #e2e8f0;
-  background-color: #0f172a;
+  background-color: #0b1220; /* deep slate with indigo tint */
 }
 
 /* Full expense table for PDF only: off-screen on screen; see body.pdf-export to include in capture. */
