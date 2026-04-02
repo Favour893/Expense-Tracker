@@ -294,8 +294,8 @@ function Entries() {
                 <div className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">{filteredTransactions.length} items</div>
               </div>
 
-              <div className="ml-auto flex w-full flex-col items-stretch gap-0.5 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-                <label className="flex w-full flex-row flex-wrap items-center justify-end gap-2 text-xs text-slate-600 dark:text-slate-300 sm:w-auto sm:text-sm">
+              <div className="flex w-full flex-row flex-wrap items-center gap-2">
+                <label className="flex min-w-[12rem] flex-1 flex-row flex-wrap items-center justify-start gap-2 text-xs text-slate-600 dark:text-slate-300 sm:text-sm">
                   <span className="shrink-0 font-medium">Month</span>
                   <input
                     className="et-input min-w-0 flex-1 !min-h-[2.5rem] !px-3 !py-2 text-sm sm:w-auto sm:flex-initial sm:min-w-[10rem]"
@@ -304,7 +304,7 @@ function Entries() {
                     onChange={(e) => setMonthKey(e.target.value)}
                   />
                 </label>
-                <label className="flex w-full flex-row flex-wrap items-center justify-end gap-2 text-xs text-slate-600 dark:text-slate-300 sm:w-auto sm:text-sm">
+                <label className="ml-auto flex shrink-0 flex-row flex-wrap items-center justify-end gap-2 text-xs text-slate-600 dark:text-slate-300 sm:text-sm">
                   <span className="shrink-0 font-medium">Currency</span>
                   <select
                     className="et-input min-w-[10rem] !min-h-[2.5rem] !px-3 !py-2 text-sm sm:min-w-[12rem]"

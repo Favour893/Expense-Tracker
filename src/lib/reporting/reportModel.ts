@@ -87,6 +87,38 @@ export function formatReportMonthLabel(monthKey: string, locale = "en-GB"): stri
   return `${monthName}, ${year}`;
 }
 
+function parseIsoDateLocal(iso: string): Date {
+  const [y, m, d] = String(iso || "").split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function toIsoDateLocal(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** e.g. `2026-01-15` / `2026-02-28` → `15 Jan 2026 – 28 Feb 2026` (local calendar dates). */
+export function formatReportDateRangeLabel(startIso: string, endIso: string, locale = "en-GB"): string {
+  const s = parseIsoDateLocal(startIso);
+  const e = parseIsoDateLocal(endIso);
+  if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return `${startIso} – ${endIso}`;
+  const opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" };
+  const a = s.toLocaleDateString(locale, opts);
+  const b = e.toLocaleDateString(locale, opts);
+  if (startIso === endIso) return a;
+  return `${a} – ${b}`;
+}
+
+/** Calendar period immediately before `startIso`, same number of inclusive days as [startIso, endIso]. */
+export function previousEqualCalendarRange(startIso: string, endIso: string): { start: string; end: string } | null {
+  const s = parseIsoDateLocal(startIso);
+  const e = parseIsoDateLocal(endIso);
+  if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime()) || s > e) return null;
+  const dayCount = Math.round((e.getTime() - s.getTime()) / 86400000) + 1;
+  const prevEnd = new Date(s.getFullYear(), s.getMonth(), s.getDate() - 1);
+  const prevStart = new Date(prevEnd.getFullYear(), prevEnd.getMonth(), prevEnd.getDate() - (dayCount - 1));
+  return { start: toIsoDateLocal(prevStart), end: toIsoDateLocal(prevEnd) };
+}
+
 function monthKeyToTitle(monthKey: string, locale = "en-US") {
   const [y, m] = String(monthKey || "").split("-");
   const year = Number(y);
@@ -178,13 +210,24 @@ export function renderNarrative(opts: {
   monthKey: string;
   hasLastMonth: boolean;
   locale?: string;
+  /** When set (e.g. custom date range), replaces calendar month title in all sentences. */
+  periodLabel?: string;
   /** Sum of top-3 category % shares (0–100), rounded to one decimal; when set, matches filtered table basis. */
   top3PercentSumRounded1Override?: number | null;
   /** Total expense amount that the top-3 % line is relative to (e.g. filtered table total). */
   top3SpendingBasisTotal?: number | null;
 }) {
-  const { report, currency, monthKey, hasLastMonth, locale = "en-US", top3PercentSumRounded1Override, top3SpendingBasisTotal } = opts;
-  const monthTitle = monthKeyToTitle(monthKey || report?.monthKey, locale);
+  const {
+    report,
+    currency,
+    monthKey,
+    hasLastMonth,
+    locale = "en-US",
+    periodLabel,
+    top3PercentSumRounded1Override,
+    top3SpendingBasisTotal
+  } = opts;
+  const monthTitle = periodLabel || monthKeyToTitle(monthKey || report?.monthKey, locale);
 
   const { incomeTotal, expensesTotal } = report?.totals || { incomeTotal: 0, expensesTotal: 0 };
   const narrative = report?.narrative || ({} as MonthlyReport["narrative"]);
@@ -221,12 +264,14 @@ export function renderNarrative(opts: {
       const absPct = Math.abs(narrative.expensesDeltaPct) * 100;
       const signMoney = narrative.expensesDelta >= 0 ? "+" : "-";
       const money = formatMoney(Math.abs(narrative.expensesDelta), currency, locale);
-      lines.push(`Compared to last month, your total spending ${deltaWord} by ${signMoney}${money} (${absPct.toFixed(0)}%).`);
+      lines.push(
+        `Compared to the previous period (same length), your total spending ${deltaWord} by ${signMoney}${money} (${absPct.toFixed(0)}%).`
+      );
     } else {
-      lines.push(`Compared to last month, your total spending stayed about the same.`);
+      lines.push(`Compared to the previous period, your total spending stayed about the same.`);
     }
   } else {
-    lines.push(`Set up last month's data to unlock a month-over-month comparison.`);
+    lines.push(`Add transactions for the calendar period immediately before this range to unlock a spending comparison.`);
   }
 
   return lines.join("\n");

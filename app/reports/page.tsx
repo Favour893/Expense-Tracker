@@ -5,13 +5,13 @@ import { RequireAuth } from "../../src/components/auth/RequireAuth";
 import { useAuth } from "../../src/components/auth/AuthProvider";
 import type { Category, Transaction } from "../../src/types/app";
 import { listCategories } from "../../src/lib/repos/categoriesRepo";
-import { listTransactionsByMonth } from "../../src/lib/repos/entriesRepo";
+import { listTransactionsByDateRange } from "../../src/lib/repos/entriesRepo";
 import {
   computeMonthlyReport,
   computeTop3ExpensePercentSumRounded1,
-  formatReportMonthLabel,
-  renderNarrative,
-  shiftMonthKey
+  formatReportDateRangeLabel,
+  previousEqualCalendarRange,
+  renderNarrative
 } from "../../src/lib/reporting/reportModel";
 import { ReportPreview } from "../../src/components/reports/ReportPreview";
 import { ExportPdfButton } from "../../src/components/reports/ExportPdfButton";
@@ -19,20 +19,18 @@ import { PageLoadingShimmer } from "../../src/components/ui/PageLoadingShimmer";
 import { formatUkDate } from "../../src/lib/formatDisplayDate";
 import { CashLogo } from "../../src/components/branding/CashLogo";
 
-function currentMonthKey() {
-  const dt = new Date();
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth() + 1).padStart(2, "0");
-  return `${y}-${m}`;
+function toIsoLocal(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function dateInputValue(ts: any) {
-  if (!ts) return "";
-  const dt = ts.toDate ? ts.toDate() : new Date(ts);
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth() + 1).padStart(2, "0");
-  const d = String(dt.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+function defaultDateRange(): { start: string; end: string } {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  return {
+    start: toIsoLocal(new Date(y, m, 1)),
+    end: toIsoLocal(new Date(y, m + 1, 0))
+  };
 }
 
 function formatMoney(value: number, currency: string) {
@@ -58,7 +56,8 @@ function Reports() {
   const currency = profile?.currency || userDoc?.preferredCurrency || "USD";
   const displayName = userDoc?.displayName || user?.displayName || user?.email || "User";
 
-  const [monthKey, setMonthKey] = useState(() => currentMonthKey());
+  const [rangeStart, setRangeStart] = useState(() => defaultDateRange().start);
+  const [rangeEnd, setRangeEnd] = useState(() => defaultDateRange().end);
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [lastMonthTransactions, setLastMonthTransactions] = useState<Transaction[]>([]);
@@ -66,32 +65,30 @@ function Reports() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
-  const [selectedCategoryId, setSelectedCategoryId] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
-  const [dateInputMode, setDateInputMode] = useState<"text" | "date">("text");
-  const [sortBy, setSortBy] = useState<"date" | "category" | "amount" | "description">("date");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
+  const [narrativeOpen, setNarrativeOpen] = useState(false);
   const pageSize = 20;
+
+  const reportMonthKey = rangeStart.slice(0, 7);
+
+  const periodLabel = useMemo(
+    () => formatReportDateRangeLabel(rangeStart, rangeEnd, "en-GB"),
+    [rangeStart, rangeEnd]
+  );
 
   const report = useMemo(() => {
     if (!categories) return null;
     return computeMonthlyReport({
       transactions,
       categories,
-      monthKey,
+      monthKey: reportMonthKey,
       lastMonthTransactions
     });
-  }, [categories, lastMonthTransactions, monthKey, transactions]);
+  }, [categories, lastMonthTransactions, reportMonthKey, transactions]);
 
   const expenseTransactions = useMemo(
     () => transactions.filter((t) => t.type === "expense"),
     [transactions]
-  );
-
-  const expenseCategories = useMemo(
-    () => categories.filter((c) => c.type === "expense"),
-    [categories]
   );
 
   const filteredExpenseTransactions = useMemo(() => {
@@ -100,15 +97,13 @@ function Reports() {
 
     return expenseTransactions.filter((t) => {
       const categoryName = categoryMap.get(t.categoryId) || "Unknown";
-      if (selectedCategoryId && t.categoryId !== selectedCategoryId) return false;
-      if (selectedDate && dateInputValue(t.date) !== selectedDate) return false;
       if (!q) return true;
       const joined = [formatUkDate(t.date), categoryName, String(t.amount || ""), t.description || ""]
         .join(" ")
         .toLowerCase();
       return joined.includes(q);
     });
-  }, [categories, expenseTransactions, searchText, selectedCategoryId, selectedDate]);
+  }, [categories, expenseTransactions, searchText]);
 
   const filteredExpenseTotal = useMemo(
     () => filteredExpenseTransactions.reduce((s, t) => s + Number(t.amount || 0), 0),
@@ -126,7 +121,8 @@ function Reports() {
     return renderNarrative({
       report,
       currency,
-      monthKey,
+      monthKey: reportMonthKey,
+      periodLabel,
       hasLastMonth,
       locale: "en-GB",
       top3PercentSumRounded1Override: top3PercentSumRoundedFromTable,
@@ -136,8 +132,9 @@ function Reports() {
     currency,
     filteredExpenseTotal,
     lastMonthTransactions.length,
-    monthKey,
+    periodLabel,
     report,
+    reportMonthKey,
     top3PercentSumRoundedFromTable
   ]);
 
@@ -167,21 +164,9 @@ function Reports() {
     const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
 
     const sorted = filteredExpenseTransactions.slice().sort((a, b) => {
-      const categoryA = (categoryMap.get(a.categoryId) || "Unknown").toLowerCase();
-      const categoryB = (categoryMap.get(b.categoryId) || "Unknown").toLowerCase();
-      const descriptionA = (a.description || "").toLowerCase();
-      const descriptionB = (b.description || "").toLowerCase();
       const dateA = a.date?.toMillis ? a.date.toMillis() : 0;
       const dateB = b.date?.toMillis ? b.date.toMillis() : 0;
-      const amountA = Number(a.amount || 0);
-      const amountB = Number(b.amount || 0);
-
-      let compare = 0;
-      if (sortBy === "date") compare = dateA - dateB;
-      if (sortBy === "category") compare = categoryA.localeCompare(categoryB);
-      if (sortBy === "amount") compare = amountA - amountB;
-      if (sortBy === "description") compare = descriptionA.localeCompare(descriptionB);
-      return sortDir === "asc" ? compare : -compare;
+      return dateB - dateA;
     });
 
     const totalExpenseAmount = sorted.reduce((sum, t) => sum + Number(t.amount || 0), 0);
@@ -199,7 +184,7 @@ function Reports() {
         description: t.description || ""
       };
     });
-  }, [categories, filteredExpenseTransactions, sortBy, sortDir]);
+  }, [categories, filteredExpenseTransactions]);
 
   const totalPages = Math.max(1, Math.ceil(tableRows.length / pageSize));
   const pagedRows = useMemo(() => {
@@ -209,33 +194,39 @@ function Reports() {
   }, [page, tableRows, totalPages]);
 
   useEffect(() => {
-    if (selectedCategoryId && !expenseCategories.some((c) => c.id === selectedCategoryId)) {
-      setSelectedCategoryId("");
-    }
-  }, [expenseCategories, selectedCategoryId]);
-
-  useEffect(() => {
     setPage(1);
-  }, [monthKey, searchText, selectedCategoryId, selectedDate, sortBy, sortDir]);
+  }, [rangeStart, rangeEnd, searchText]);
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
 
-  async function loadAll(mk: string) {
+  useEffect(() => {
+    if (!narrativeOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setNarrativeOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [narrativeOpen]);
+
+  async function loadAll(startIso: string, endIso: string) {
     if (!uid) return;
     setBusy(true);
     setError(null);
     try {
-      const [cats, txs] = await Promise.all([listCategories(uid), listTransactionsByMonth(uid, mk)]);
+      const [cats, txs] = await Promise.all([
+        listCategories(uid),
+        listTransactionsByDateRange(uid, startIso, endIso)
+      ]);
       setCategories(cats);
       setTransactions(txs);
 
-      const lastMk = shiftMonthKey(mk, -1);
+      const prev = previousEqualCalendarRange(startIso, endIso);
       let lastTxs: Transaction[] = [];
-      if (lastMk) {
+      if (prev) {
         try {
-          lastTxs = await listTransactionsByMonth(uid, lastMk);
+          lastTxs = await listTransactionsByDateRange(uid, prev.start, prev.end);
         } catch {
           lastTxs = [];
         }
@@ -250,30 +241,61 @@ function Reports() {
 
   useEffect(() => {
     if (!uid) return;
-    loadAll(monthKey).catch((e) => setError(e?.message || String(e)));
+    loadAll(rangeStart, rangeEnd).catch((e) => setError(e?.message || String(e)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uid, monthKey]);
+  }, [uid, rangeStart, rangeEnd]);
 
   return (
-    <div className="flex h-0 min-h-0 w-full min-w-0 flex-1 flex-col gap-1 overflow-hidden sm:gap-2">
-      <div className="shrink-0 flex flex-col gap-1 sm:gap-2">
-        <div className="flex flex-col gap-1 sm:block">
-          <h1 className="bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-500 bg-clip-text text-lg font-bold text-transparent sm:text-2xl">
-            Monthly Reports
-          </h1>
-          <p className="hidden text-xs text-slate-600 dark:text-slate-300 sm:mt-1 sm:block sm:text-sm">
-            Preview in the browser, then export as PDF.
-          </p>
-        </div>
-        <label className="flex w-full flex-row flex-wrap items-center gap-2 text-[11px] text-slate-600 dark:text-slate-300 sm:ml-auto sm:w-auto sm:justify-end sm:text-sm">
-          <span className="shrink-0 font-medium">Month</span>
-          <input
-            className="et-input min-h-11 min-w-0 flex-1 py-2.5 text-sm sm:min-h-12 sm:w-auto sm:flex-initial sm:py-3 sm:text-base sm:min-w-[10rem]"
-            type="month"
-            value={monthKey}
-            onChange={(e) => setMonthKey(e.target.value)}
+    <div className="flex h-0 min-h-0 w-full min-w-0 flex-1 flex-col gap-0.5 overflow-hidden sm:gap-1">
+      <div className="shrink-0 flex flex-col gap-0.5 sm:gap-1">
+        <div className="flex w-full flex-row flex-wrap items-center justify-between gap-1.5">
+          <div className="flex min-w-0 flex-1 flex-row flex-wrap items-center gap-1.5 sm:gap-2">
+            <div className="flex min-w-0 flex-1 flex-row flex-wrap items-center gap-2 text-[11px] text-slate-600 dark:text-slate-300 sm:flex-initial sm:gap-2 sm:text-sm">
+              <label className="flex min-w-0 flex-1 flex-row flex-wrap items-center gap-1.5 sm:flex-initial">
+                <span className="shrink-0 font-medium">From</span>
+                <input
+                  className="et-input min-h-10 min-w-0 flex-1 !px-3 !py-2 text-sm sm:min-w-[9.5rem]"
+                  type="date"
+                  value={rangeStart}
+                  max={rangeEnd}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setRangeStart(v);
+                    if (v && rangeEnd && v > rangeEnd) setRangeEnd(v);
+                  }}
+                />
+              </label>
+              <label className="flex min-w-0 flex-1 flex-row flex-wrap items-center gap-1.5 sm:flex-initial">
+                <span className="shrink-0 font-medium">To</span>
+                <input
+                  className="et-input min-h-10 min-w-0 flex-1 !px-3 !py-2 text-sm sm:min-w-[9.5rem]"
+                  type="date"
+                  value={rangeEnd}
+                  min={rangeStart}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setRangeEnd(v);
+                    if (v && rangeStart && v < rangeStart) setRangeStart(v);
+                  }}
+                />
+              </label>
+            </div>
+            <button
+              type="button"
+              className="et-btn-secondary shrink-0 !min-h-10 whitespace-nowrap px-3 py-2 text-xs font-semibold sm:text-sm"
+              disabled={busy || !report}
+              onClick={() => setNarrativeOpen(true)}
+            >
+              Narrative
+            </button>
+          </div>
+          <ExportPdfButton
+            exportFilenameBase={`${rangeStart}_${rangeEnd}`}
+            currency={currency}
+            disabled={busy || !report}
+            buttonClassName="shrink-0 rounded-lg !min-h-10 px-3 py-1 text-xs font-semibold sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-sm"
           />
-        </label>
+        </div>
       </div>
 
       {error ? (
@@ -282,24 +304,12 @@ function Reports() {
         </div>
       ) : null}
 
-      <div className="shrink-0 flex flex-row items-center justify-between gap-2 rounded-lg border border-indigo-100 bg-gradient-to-r from-indigo-50 to-sky-50 px-2 py-1.5 dark:border-white/10 dark:from-white/5 dark:to-white/5 sm:rounded-xl sm:p-3 md:gap-3 lg:px-2.5 lg:py-2 lg:sm:p-2.5">
-        <div className="min-w-0 truncate text-[11px] text-slate-600 dark:text-slate-300 sm:text-sm">
-          {busy ? "Loading…" : "Ready"}
-        </div>
-        <ExportPdfButton
-          monthKey={monthKey}
-          currency={currency}
-          disabled={busy || !report}
-          buttonClassName="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold sm:rounded-xl sm:px-4 sm:py-2 sm:text-base"
-        />
-      </div>
-
       {busy ? (
         <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
           <PageLoadingShimmer label="Loading report" />
         </div>
       ) : (
-        <div className="flex h-0 min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-hidden sm:gap-3">
+        <div className="flex h-0 min-h-0 min-w-0 flex-1 flex-col gap-1 overflow-hidden sm:gap-2">
           <div
             id="report-root"
             className="relative flex max-h-[min(20dvh,132px)] min-h-0 shrink-0 flex-col overflow-hidden sm:max-h-[min(26dvh,200px)] lg:max-h-[min(22dvh,220px)] xl:max-h-[min(26dvh,280px)]"
@@ -312,7 +322,7 @@ function Reports() {
               <div className="max-w-[78%] text-right text-xs font-semibold leading-tight sm:text-sm">{displayName}</div>
             </div>
             <div className="report-preview-scroll h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
-              {report ? <ReportPreview report={report} monthKey={monthKey} currency={currency} narrativeText={narrativeText} /> : null}
+              {report ? <ReportPreview report={report} currency={currency} narrativeText={narrativeText} /> : null}
             </div>
 
             {report ? (
@@ -321,7 +331,7 @@ function Reports() {
               <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-md shadow-indigo-100/40 dark:border-white/10 dark:bg-white/5 dark:shadow-none">
                 <h3 className="text-lg font-semibold text-indigo-700 dark:text-indigo-300">Expense breakdown</h3>
                 <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-                  All expense entries for {formatReportMonthLabel(monthKey)}.
+                  All expense entries for {formatReportDateRangeLabel(rangeStart, rangeEnd, "en-GB")}.
                 </p>
                 <div className="mt-4 overflow-visible rounded-xl border border-slate-200 dark:border-white/10">
                   <table className="report-table min-w-full text-center text-sm text-slate-800 dark:text-slate-100">
@@ -342,7 +352,7 @@ function Reports() {
                           <td className="px-3 py-2">{row.date}</td>
                           <td className="px-3 py-2">{row.category}</td>
                           <td className="px-3 py-2 font-medium">{formatMoney(row.amount, currency)}</td>
-                          <td className="px-3 py-2 tabular-nums">{row.pctOfTotal.toFixed(1)}%</td>
+                          <td className="px-3 py-2 tabular-nums">{row.pctOfTotal.toFixed(2)}%</td>
                           <td className="px-3 py-2">{row.description || "-"}</td>
                         </tr>
                       ))}
@@ -352,7 +362,7 @@ function Reports() {
               </section>
             ) : (
               <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
-                No expense transactions for this month.
+                No expense transactions for this period.
               </div>
             )}
           </div>
@@ -362,70 +372,26 @@ function Reports() {
           <section
             role="region"
             aria-label="Expense breakdown"
-            className="et-card flex h-0 min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-x-hidden overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] touch-pan-y sm:gap-2"
+            className="et-card !p-2 sm:!p-3 flex h-0 min-h-0 min-w-0 flex-1 flex-col gap-1 overflow-hidden sm:gap-1.5"
           >
-            <div className="flex shrink-0 flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
-              <h2 className="text-sm font-semibold sm:text-lg">Expense breakdown</h2>
-              <div className="text-[11px] text-slate-600 dark:text-slate-300 sm:text-sm">{tableRows.length} records</div>
-            </div>
-
-            <div className="grid shrink-0 grid-cols-1 gap-1.5 sm:grid-cols-2 sm:gap-2 md:grid-cols-2 lg:grid-cols-4">
+            <div className="shrink-0">
               <input
-                className="et-search col-span-full lg:col-span-1"
+                className="et-search w-full !min-h-10 !px-3 !py-2 text-sm"
                 placeholder="Search expenses"
                 title="Search by date, category, amount or description"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
               />
-              <select className="et-input" value={selectedCategoryId} onChange={(e) => setSelectedCategoryId(e.target.value)}>
-                <option value="">All expense categories</option>
-                {expenseCategories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              <input
-                className="et-input"
-                type={dateInputMode}
-                placeholder="Select date"
-                value={selectedDate}
-                onFocus={() => setDateInputMode("date")}
-                onBlur={() => {
-                  if (!selectedDate) setDateInputMode("text");
-                }}
-                onChange={(e) => {
-                  const next = e.target.value;
-                  setSelectedDate(next);
-                  if (!next) setDateInputMode("text");
-                }}
-              />
-              <div className="grid grid-cols-2 gap-2 sm:col-span-2 lg:col-span-1">
-                <select
-                  className="et-input"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as "date" | "category" | "amount" | "description")}
-                >
-                  <option value="date">Sort: Date</option>
-                  <option value="category">Sort: Category</option>
-                  <option value="amount">Sort: Amount</option>
-                  <option value="description">Sort: Description</option>
-                </select>
-                <select className="et-input" value={sortDir} onChange={(e) => setSortDir(e.target.value as "asc" | "desc")}>
-                  <option value="desc">Desc</option>
-                  <option value="asc">Asc</option>
-                </select>
-              </div>
             </div>
 
-            <div className="min-w-0 shrink-0">
+            <div className="mt-1 min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] touch-pan-y">
               {!tableRows.length ? (
                 <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300/80 bg-slate-50/70 px-4 py-10 text-center dark:border-white/20 dark:bg-white/5">
                   <div className="mb-2 text-3xl" aria-hidden="true">
                     empty
                   </div>
                   <div className="text-base font-semibold text-slate-700 dark:text-slate-200">No expenses recorded yet</div>
-                  <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">Add entries for this month to see them here.</div>
+                  <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">Add entries in this date range to see them here.</div>
                 </div>
               ) : (
                 <div className="max-w-full min-w-0 overflow-x-auto rounded-lg border border-slate-200 dark:border-white/10 sm:rounded-xl">
@@ -465,7 +431,7 @@ function Reports() {
                             {formatMoney(row.amount, currency)}
                           </td>
                           <td className="min-w-[4.25rem] whitespace-nowrap px-2 py-1.5 tabular-nums text-slate-700 dark:text-slate-200 sm:px-3 sm:py-2">
-                            {row.pctOfTotal.toFixed(1)}%
+                            {row.pctOfTotal.toFixed(2)}%
                           </td>
                           <td className="min-w-[12rem] whitespace-nowrap px-2 py-1.5 text-center sm:px-3 sm:py-2">
                             <span className="mx-auto block max-w-[16rem] truncate text-center">
@@ -510,6 +476,39 @@ function Reports() {
           </section>
         </div>
       )}
+      {narrativeOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+          role="presentation"
+          onClick={() => setNarrativeOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="narrative-dialog-title"
+            className="et-card max-h-[min(85dvh,640px)] w-full max-w-lg overflow-hidden !p-0 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-4 py-3 dark:border-white/10">
+              <h2 id="narrative-dialog-title" className="text-base font-bold text-indigo-700 dark:text-indigo-300">
+                Narrative
+              </h2>
+              <button
+                type="button"
+                className="et-btn-secondary !min-h-9 px-3 py-1.5 text-xs font-semibold sm:text-sm"
+                onClick={() => setNarrativeOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+            <div className="max-h-[min(70dvh,520px)] overflow-y-auto overscroll-contain px-4 py-3 [-webkit-overflow-scrolling:touch]">
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-200">
+                {narrativeText || "—"}
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

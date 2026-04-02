@@ -117,6 +117,16 @@ select option {
   pointer-events: none;
 }
 
+/* Narrative: off-screen on screen (opened in app modal); same DOM flows in PDF export. */
+#report-root .report-narrative-pdf-slot {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  width: min(720px, 100vw);
+  overflow: visible;
+  pointer-events: none;
+}
+
 /* Report title: keep YYYY-MM on screen; show "April, 2026" only while exporting PDF. */
 #report-root .report-month-label-pdf {
   display: none;
@@ -177,6 +187,15 @@ body.pdf-export #report-root .report-pdf-expense-only {
   max-width: 100% !important;
   pointer-events: none;
   margin-top: 16px !important;
+}
+
+body.pdf-export #report-root .report-narrative-pdf-slot {
+  position: static !important;
+  left: auto !important;
+  top: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  pointer-events: none;
 }
 
 body.pdf-export #report-root .report-month-label-screen {

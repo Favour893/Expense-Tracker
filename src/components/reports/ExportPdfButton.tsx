@@ -57,12 +57,13 @@ async function svgToPngDataUrl(svgMarkup: string, opts?: { sizePx?: number; alph
 }
 
 export function ExportPdfButton({
-  monthKey,
+  exportFilenameBase,
   currency,
   disabled,
   buttonClassName = ""
 }: {
-  monthKey: string;
+  /** Used in the download filename after sanitizing (e.g. `2026-01-01_2026-01-31`). */
+  exportFilenameBase: string;
   currency: string;
   disabled?: boolean;
   /** Extra classes for the export button (e.g. compact mobile sizing). */
@@ -86,7 +87,8 @@ export function ExportPdfButton({
       const mod: any = await import("html2pdf.js");
       const html2pdf: any = mod?.default || mod;
 
-      const filename = `monthly-report-${monthKey}.pdf`;
+      const safeBase = String(exportFilenameBase || "report").replace(/[^a-zA-Z0-9-_]+/g, "-");
+      const filename = `monthly-report-${safeBase}.pdf`;
 
       const worker = html2pdf()
         .set({
