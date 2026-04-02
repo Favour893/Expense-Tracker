@@ -68,6 +68,7 @@ function Reports() {
   const [searchText, setSearchText] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
+  const [dateInputMode, setDateInputMode] = useState<"text" | "date">("text");
   const [sortBy, setSortBy] = useState<"date" | "category" | "amount" | "description">("date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
@@ -384,7 +385,21 @@ function Reports() {
                   </option>
                 ))}
               </select>
-              <input className="et-input" type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
+              <input
+                className="et-input"
+                type={dateInputMode}
+                placeholder="Select date"
+                value={selectedDate}
+                onFocus={() => setDateInputMode("date")}
+                onBlur={() => {
+                  if (!selectedDate) setDateInputMode("text");
+                }}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setSelectedDate(next);
+                  if (!next) setDateInputMode("text");
+                }}
+              />
               <div className="grid grid-cols-2 gap-2 sm:col-span-2 lg:col-span-1">
                 <select
                   className="et-input"
