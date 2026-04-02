@@ -144,6 +144,29 @@ body.pdf-export #report-root {
   background: #ffffff !important;
   color: #000000 !important;
   border: none !important;
+  max-height: none !important;
+  height: auto !important;
+  overflow: visible !important;
+  /* Ensure content never overlaps stamped footer. */
+  padding-bottom: 0.65in !important;
+}
+
+/* Ensure report preview content isn't clipped during capture. */
+body.pdf-export #report-root .report-preview-scroll {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* First-page header inside the report root (shown only in PDF export). */
+body.pdf-export #report-root .pdf-first-page-header {
+  display: flex !important;
+  min-height: 0.4in !important;
+  align-items: flex-start !important;
+  padding-top: 0 !important;
+  padding-bottom: 0.06in !important;
+  padding-left: 0.05in !important;
+  padding-right: 0.05in !important;
 }
 
 body.pdf-export #report-root .report-pdf-expense-only {
@@ -153,6 +176,7 @@ body.pdf-export #report-root .report-pdf-expense-only {
   width: 100% !important;
   max-width: 100% !important;
   pointer-events: none;
+  margin-top: 16px !important;
 }
 
 body.pdf-export #report-root .report-month-label-screen {
@@ -175,6 +199,17 @@ body.pdf-export table.report-table th,
 body.pdf-export table.report-table td {
   color: #000000 !important;
   border-bottom: 1px solid rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Force each PDF table chunk onto its own page (one header row per page). */
+body.pdf-export table.report-table tr {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+
+/* Re-show column names when the same table flows onto a new PDF page. */
+body.pdf-export table.report-table thead {
+  display: table-header-group !important;
 }
 
 @media print {

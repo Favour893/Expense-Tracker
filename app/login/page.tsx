@@ -135,7 +135,7 @@ export default function LoginPage() {
     <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden px-2 py-2">
       <div className="et-card mx-auto flex h-0 min-h-0 w-full max-w-2xl flex-1 flex-col overflow-hidden">
         <div className="flex shrink-0 items-center gap-3">
-          <CashLogo size={38} />
+          <CashLogo size={42} className="shrink-0 translate-y-px" />
           <h1 className="bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-500 bg-clip-text text-3xl font-extrabold text-transparent">Expense Tracker</h1>
         </div>
         <p className="mt-2 shrink-0 text-sm text-slate-600 dark:text-slate-300">Track income, every expense, and generate monthly reports.</p>

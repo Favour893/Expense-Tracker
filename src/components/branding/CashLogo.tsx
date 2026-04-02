@@ -1,8 +1,9 @@
 import React from "react";
 
-export function CashLogo({ size = 34 }: { size?: number }) {
+export function CashLogo({ size = 34, className = "" }: { size?: number; className?: string }) {
   return (
     <svg
+      className={className}
       width={size}
       height={size}
       viewBox="0 0 64 64"

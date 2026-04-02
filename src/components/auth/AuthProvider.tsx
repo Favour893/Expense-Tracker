@@ -276,7 +276,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           <header className="relative z-40 shrink-0 border-b border-indigo-100 bg-white/70 backdrop-blur dark:border-white/10 dark:bg-slate-900/60">
             <div className="mx-auto grid w-full max-w-6xl grid-cols-[1fr_auto] grid-rows-[auto_auto] gap-x-2 gap-y-1 px-2 py-1.5 md:grid-cols-[auto_1fr_auto] md:grid-rows-1 md:items-center md:gap-3 md:px-3 md:py-2">
               <div className="col-start-1 row-start-1 flex min-w-0 items-center gap-2">
-                <CashLogo size={28} />
+                <CashLogo size={32} className="shrink-0 translate-y-px" />
                 <div className="truncate bg-gradient-to-r from-indigo-600 to-sky-500 bg-clip-text text-base font-bold text-transparent md:text-lg">
                   Expense Tracker
                 </div>

@@ -17,6 +17,7 @@ import { ReportPreview } from "../../src/components/reports/ReportPreview";
 import { ExportPdfButton } from "../../src/components/reports/ExportPdfButton";
 import { PageLoadingShimmer } from "../../src/components/ui/PageLoadingShimmer";
 import { formatUkDate } from "../../src/lib/formatDisplayDate";
+import { CashLogo } from "../../src/components/branding/CashLogo";
 
 function currentMonthKey() {
   const dt = new Date();
@@ -55,6 +56,7 @@ function Reports() {
   const uid = user?.uid;
 
   const currency = profile?.currency || userDoc?.preferredCurrency || "USD";
+  const displayName = userDoc?.displayName || user?.displayName || user?.email || "User";
 
   const [monthKey, setMonthKey] = useState(() => currentMonthKey());
   const [categories, setCategories] = useState<Category[]>([]);
@@ -69,7 +71,7 @@ function Reports() {
   const [sortBy, setSortBy] = useState<"date" | "category" | "amount" | "description">("date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const pageSize = 20;
 
   const report = useMemo(() => {
     if (!categories) return null;
@@ -279,7 +281,7 @@ function Reports() {
         </div>
       ) : null}
 
-      <div className="shrink-0 flex flex-row items-center justify-between gap-2 rounded-lg border border-indigo-100 bg-gradient-to-r from-indigo-50 to-sky-50 px-2 py-1.5 dark:border-white/10 dark:from-white/5 dark:to-white/5 sm:rounded-xl sm:p-3 md:gap-3">
+      <div className="shrink-0 flex flex-row items-center justify-between gap-2 rounded-lg border border-indigo-100 bg-gradient-to-r from-indigo-50 to-sky-50 px-2 py-1.5 dark:border-white/10 dark:from-white/5 dark:to-white/5 sm:rounded-xl sm:p-3 md:gap-3 lg:px-2.5 lg:py-2 lg:sm:p-2.5">
         <div className="min-w-0 truncate text-[11px] text-slate-600 dark:text-slate-300 sm:text-sm">
           {busy ? "Loading…" : "Ready"}
         </div>
@@ -296,12 +298,19 @@ function Reports() {
           <PageLoadingShimmer label="Loading report" />
         </div>
       ) : (
-        <div className="flex h-0 min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-hidden sm:gap-3 md:flex-row md:items-stretch">
+        <div className="flex h-0 min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-hidden sm:gap-3">
           <div
             id="report-root"
-            className="relative flex max-h-[min(22dvh,148px)] min-h-0 shrink-0 flex-col overflow-hidden sm:max-h-[min(30dvh,220px)] md:max-h-none md:min-h-0 md:flex-1"
+            className="relative flex max-h-[min(20dvh,132px)] min-h-0 shrink-0 flex-col overflow-hidden sm:max-h-[min(26dvh,200px)] lg:max-h-[min(22dvh,220px)] xl:max-h-[min(26dvh,280px)]"
           >
-            <div className="h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
+            <div className="pdf-first-page-header hidden items-start justify-between gap-2 border-b border-slate-300/60 px-1 pt-0.5 pb-1 text-slate-900">
+              <div className="inline-flex items-center gap-2">
+                <CashLogo size={28} className="shrink-0 translate-y-px" />
+                <div className="text-sm font-bold">Expense Tracker</div>
+              </div>
+              <div className="max-w-[78%] text-right text-xs font-semibold leading-tight sm:text-sm">{displayName}</div>
+            </div>
+            <div className="report-preview-scroll h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
               {report ? <ReportPreview report={report} monthKey={monthKey} currency={currency} narrativeText={narrativeText} /> : null}
             </div>
 
@@ -317,6 +326,7 @@ function Reports() {
                   <table className="report-table min-w-full text-center text-sm text-slate-800 dark:text-slate-100">
                     <thead className="bg-slate-50 text-slate-700 dark:bg-white/5 dark:text-slate-200">
                       <tr>
+                        <th className="px-3 py-2 font-semibold">No.</th>
                         <th className="px-3 py-2 font-semibold">Date</th>
                         <th className="px-3 py-2 font-semibold">Category</th>
                         <th className="px-3 py-2 font-semibold">Amount</th>
@@ -325,8 +335,9 @@ function Reports() {
                       </tr>
                     </thead>
                     <tbody>
-                      {pdfExpenseRows.map((row) => (
+                      {pdfExpenseRows.map((row, idx) => (
                         <tr key={row.id} className="border-t border-slate-200/80 dark:border-white/10">
+                          <td className="px-3 py-2 tabular-nums">{idx + 1}</td>
                           <td className="px-3 py-2">{row.date}</td>
                           <td className="px-3 py-2">{row.category}</td>
                           <td className="px-3 py-2 font-medium">{formatMoney(row.amount, currency)}</td>
@@ -350,7 +361,7 @@ function Reports() {
           <section
             role="region"
             aria-label="Expense breakdown"
-            className="et-card flex h-0 min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-x-hidden overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] touch-pan-y sm:gap-2 md:min-h-0"
+            className="et-card flex h-0 min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-x-hidden overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] touch-pan-y sm:gap-2"
           >
             <div className="flex shrink-0 flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
               <h2 className="text-sm font-semibold sm:text-lg">Expense breakdown</h2>
@@ -421,7 +432,7 @@ function Reports() {
                         >
                           %
                         </th>
-                        <th className="min-w-[12rem] whitespace-nowrap px-2 py-1.5 font-semibold sm:px-3 sm:py-2">
+                        <th className="min-w-[12rem] whitespace-nowrap px-2 py-1.5 text-center font-semibold sm:px-3 sm:py-2">
                           Description
                         </th>
                       </tr>
@@ -441,8 +452,8 @@ function Reports() {
                           <td className="min-w-[4.25rem] whitespace-nowrap px-2 py-1.5 tabular-nums text-slate-700 dark:text-slate-200 sm:px-3 sm:py-2">
                             {row.pctOfTotal.toFixed(1)}%
                           </td>
-                          <td className="min-w-[12rem] whitespace-nowrap px-2 py-1.5 sm:px-3 sm:py-2">
-                            <span className="block max-w-[16rem] truncate">
+                          <td className="min-w-[12rem] whitespace-nowrap px-2 py-1.5 text-center sm:px-3 sm:py-2">
+                            <span className="mx-auto block max-w-[16rem] truncate text-center">
                               {row.description || "-"}
                             </span>
                           </td>
@@ -460,22 +471,24 @@ function Reports() {
                   Page {Math.min(page, totalPages)} of {totalPages}
                 </div>
                 <div className="flex items-center gap-1.5 sm:gap-2">
-                  <button
-                    type="button"
-                    className="et-btn-secondary min-h-10 flex-1 px-2 py-2 text-xs sm:min-h-12 sm:flex-initial sm:px-3 sm:text-base"
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page <= 1}
-                  >
-                    Previous
-                  </button>
-                  <button
-                    type="button"
-                    className="et-btn-secondary min-h-10 flex-1 px-2 py-2 text-xs sm:min-h-12 sm:flex-initial sm:px-3 sm:text-base"
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page >= totalPages}
-                  >
-                    Next
-                  </button>
+                  {page > 1 ? (
+                    <button
+                      type="button"
+                      className="et-btn-secondary min-h-10 flex-1 px-2 py-2 text-xs sm:min-h-12 sm:flex-initial sm:px-3 sm:text-base"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    >
+                      Previous
+                    </button>
+                  ) : null}
+                  {page < totalPages ? (
+                    <button
+                      type="button"
+                      className="et-btn-secondary min-h-10 flex-1 px-2 py-2 text-xs sm:min-h-12 sm:flex-initial sm:px-3 sm:text-base"
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    >
+                      Next
+                    </button>
+                  ) : null}
                 </div>
               </div>
             ) : null}
