@@ -38,7 +38,7 @@ export default function LoginPage() {
       try {
         const result = await getRedirectResult(auth);
         if (result?.user || auth.currentUser) {
-          router.push("/reports");
+          router.push("/entries");
         }
       } catch (e: any) {
         setError(e?.message || String(e));
@@ -83,7 +83,7 @@ export default function LoginPage() {
           email: email.trim()
         });
       }
-      router.push("/reports");
+      router.push("/entries");
     } catch (e: any) {
       setError(e?.message || String(e));
     } finally {
@@ -97,7 +97,7 @@ export default function LoginPage() {
 
     try {
       await signInWithPopup(auth, provider);
-      router.push("/reports");
+      router.push("/entries");
     } catch (e: any) {
       const code = e?.code || "";
       if (code === "auth/popup-blocked" || code === "auth/cancelled-popup-request") {

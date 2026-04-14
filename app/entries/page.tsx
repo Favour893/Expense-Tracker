@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Timestamp } from "firebase/firestore";
 
 import { RequireAuth } from "../../src/components/auth/RequireAuth";
@@ -13,7 +13,7 @@ import {
   listTransactionsByMonth,
   updateTransaction
 } from "../../src/lib/repos/entriesRepo";
-import { listCategories } from "../../src/lib/repos/categoriesRepo";
+import { createCategory, listCategories } from "../../src/lib/repos/categoriesRepo";
 import { PageLoadingShimmer } from "../../src/components/ui/PageLoadingShimmer";
 import { IncomeExpenseTabs, type IncomeExpenseTab } from "../../src/components/ui/IncomeExpenseTabs";
 import { CURRENCIES } from "../../src/lib/constants/countries";
@@ -116,6 +116,10 @@ function Entries() {
   const [currencyBusy, setCurrencyBusy] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [listTab, setListTab] = useState<IncomeExpenseTab>("expense");
+  const [categoryQuery, setCategoryQuery] = useState("");
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
+  const [categoryAddBusy, setCategoryAddBusy] = useState(false);
+  const categoryComboboxRef = useRef<HTMLDivElement | null>(null);
 
   const entriesPanelId = "entries-ledger-panel";
 
@@ -128,6 +132,25 @@ function Entries() {
     () => typedCategories.find((c) => c.id === categoryId),
     [typedCategories, categoryId]
   );
+
+  const categoryPickerFiltered = useMemo(() => {
+    const q = categoryQuery.trim().toLowerCase();
+    if (!q) return typedCategories;
+    return typedCategories.filter((c) => c.name.toLowerCase().includes(q));
+  }, [typedCategories, categoryQuery]);
+
+  const categoryPickerExact = useMemo(() => {
+    const t = categoryQuery.trim().toLowerCase();
+    if (!t) return null;
+    return typedCategories.find((c) => c.name.trim().toLowerCase() === t) ?? null;
+  }, [typedCategories, categoryQuery]);
+
+  const showCategoryAddInDropdown = useMemo(() => {
+    const t = categoryQuery.trim();
+    if (!t) return false;
+    if (categoryPickerExact) return false;
+    return categoryPickerFiltered.length === 0;
+  }, [categoryQuery, categoryPickerExact, categoryPickerFiltered.length]);
 
   const filteredTransactions = useMemo(() => {
     const q = searchText.trim().toLowerCase();
@@ -183,6 +206,28 @@ function Entries() {
     setCategories(data);
   }
 
+  async function onQuickAddCategory(nameOverride?: string) {
+    if (!uid) return;
+    const trimmed = (nameOverride ?? categoryQuery).trim();
+    if (!trimmed) return;
+    setCategoryAddBusy(true);
+    setError(null);
+    try {
+      const id = await createCategory(uid, { name: trimmed, type: entryType });
+      await refreshCategories();
+      setCategoryId(id);
+      setCategoryQuery(trimmed);
+      setCategoryMenuOpen(false);
+      notifySuccess("Category added.");
+    } catch (e: any) {
+      const message = e?.message || String(e);
+      setError(message);
+      notifyError(`Could not add category: ${message}`);
+    } finally {
+      setCategoryAddBusy(false);
+    }
+  }
+
   async function refreshTransactions(mk: string) {
     if (!uid) return;
     const data = await listTransactionsByMonth(uid, mk);
@@ -211,14 +256,14 @@ function Entries() {
   }, [uid, monthKey]);
 
   useEffect(() => {
-    if (!typedCategories.length) {
-      setCategoryId("");
-      return;
+    if (!categoryMenuOpen) return;
+    function onDocMouseDown(e: MouseEvent) {
+      const el = categoryComboboxRef.current;
+      if (el && !el.contains(e.target as Node)) setCategoryMenuOpen(false);
     }
-    if (!typedCategories.some((c) => c.id === categoryId)) {
-      setCategoryId(typedCategories[0].id);
-    }
-  }, [typedCategories, categoryId]);
+    document.addEventListener("mousedown", onDocMouseDown);
+    return () => document.removeEventListener("mousedown", onDocMouseDown);
+  }, [categoryMenuOpen]);
 
   function openAddTransactionModal() {
     setEditingTransactionId(null);
@@ -229,6 +274,10 @@ function Entries() {
     setDateStr(`${y}-${m}-${d}`);
     setAmount("0");
     setDescription("");
+    const first = categories.filter((c) => c.isActive !== false && c.type === entryType)[0];
+    setCategoryId(first?.id ?? "");
+    setCategoryQuery(first?.name ?? "");
+    setCategoryMenuOpen(false);
     setShowAddTransactionModal(true);
   }
 
@@ -240,7 +289,10 @@ function Entries() {
     const formatted = formatAmountInput(raw);
     setAmount(formatted != null ? formatted : raw);
     setCategoryId(t.categoryId);
+    const cat = categories.find((c) => c.id === t.categoryId);
+    setCategoryQuery(cat?.name ?? "");
     setDescription(t.description || "");
+    setCategoryMenuOpen(false);
     setShowAddTransactionModal(true);
   }
 
@@ -481,7 +533,7 @@ function Entries() {
 
       {showAddTransactionModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-4xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-white/10 dark:bg-slate-950">
+          <div className="max-h-[min(92dvh,720px)] w-full max-w-4xl overflow-visible rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-white/10 dark:bg-slate-950">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
@@ -502,7 +554,14 @@ function Entries() {
                   <select
                     className="et-input"
                     value={entryType}
-                    onChange={(e) => setEntryType(e.target.value as TransactionType)}
+                    onChange={(e) => {
+                      const nt = e.target.value as TransactionType;
+                      setEntryType(nt);
+                      const first = categories.filter((c) => c.isActive !== false && c.type === nt)[0];
+                      setCategoryId(first?.id ?? "");
+                      setCategoryQuery(first?.name ?? "");
+                      setCategoryMenuOpen(false);
+                    }}
                   >
                     <option value="expense">Expense</option>
                     <option value="income">Income</option>
@@ -538,24 +597,96 @@ function Entries() {
                 </label>
                 <label className="grid gap-2">
                   <span className="text-sm text-slate-600 dark:text-slate-300">Category item <span className="text-red-500">*</span></span>
-                  <select
-                    className="et-input"
-                    value={categoryId}
-                    onChange={(e) => setCategoryId(e.target.value)}
-                    disabled={!typedCategories.length}
-                    required
-                  >
-                    {!typedCategories.length ? (
-                      <option value="">No {entryType} categories yet</option>
-                    ) : (
-                      <option value="">Select {entryType} category</option>
-                    )}
-                    {typedCategories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div ref={categoryComboboxRef} className="relative">
+                    <input
+                      className="et-input w-full"
+                      role="combobox"
+                      aria-expanded={categoryMenuOpen}
+                      aria-controls="entry-category-listbox"
+                      aria-autocomplete="list"
+                      value={categoryQuery}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setCategoryQuery(v);
+                        setCategoryMenuOpen(true);
+                        const exact = typedCategories.find((c) => c.name.trim().toLowerCase() === v.trim().toLowerCase());
+                        if (exact) setCategoryId(exact.id);
+                        else {
+                          const cur = typedCategories.find((c) => c.id === categoryId);
+                          if (!cur || cur.name !== v) setCategoryId("");
+                        }
+                      }}
+                      onFocus={() => setCategoryMenuOpen(true)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          if (showCategoryAddInDropdown) {
+                            void onQuickAddCategory();
+                            return;
+                          }
+                          if (categoryPickerFiltered.length === 1) {
+                            const c = categoryPickerFiltered[0];
+                            setCategoryId(c.id);
+                            setCategoryQuery(c.name);
+                            setCategoryMenuOpen(false);
+                          }
+                        }
+                        if (e.key === "Escape") {
+                          setCategoryMenuOpen(false);
+                        }
+                      }}
+                      placeholder={
+                        typedCategories.length
+                          ? `Search or pick ${entryType} category…`
+                          : `Type a name to add your first ${entryType} category…`
+                      }
+                      autoComplete="off"
+                    />
+                    {categoryMenuOpen ? (
+                      <ul
+                        id="entry-category-listbox"
+                        role="listbox"
+                        className="absolute left-0 right-0 top-full z-[60] mt-1 max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-white/10 dark:bg-slate-900"
+                      >
+                        {categoryPickerFiltered.map((c) => (
+                          <li key={c.id} role="option" aria-selected={c.id === categoryId}>
+                            <button
+                              type="button"
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-indigo-50 dark:hover:bg-white/10"
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => {
+                                setCategoryId(c.id);
+                                setCategoryQuery(c.name);
+                                setCategoryMenuOpen(false);
+                              }}
+                            >
+                              {c.name}
+                            </button>
+                          </li>
+                        ))}
+                        {showCategoryAddInDropdown ? (
+                          <li role="option">
+                            <button
+                              type="button"
+                              className="w-full px-3 py-2 text-left text-sm font-medium text-indigo-700 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-white/10"
+                              disabled={categoryAddBusy}
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => void onQuickAddCategory()}
+                            >
+                              {categoryAddBusy ? "Adding…" : `Add "${categoryQuery.trim()}"`}
+                            </button>
+                          </li>
+                        ) : null}
+                        {!categoryPickerFiltered.length && !showCategoryAddInDropdown ? (
+                          <li className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
+                            {typedCategories.length
+                              ? "No matches. Type a new name, then Add or press Enter."
+                              : "Type a category name, then Add or press Enter."}
+                          </li>
+                        ) : null}
+                      </ul>
+                    ) : null}
+                  </div>
                 </label>
                 <label className="grid gap-2 sm:col-span-2 lg:col-span-3">
                   <span className="text-sm text-slate-600 dark:text-slate-300">Description</span>
@@ -589,6 +720,8 @@ function Entries() {
                   onClick={() => {
                     setShowAddTransactionModal(false);
                     setEditingTransactionId(null);
+                    setCategoryQuery("");
+                    setCategoryMenuOpen(false);
                   }}
                 >
                   Cancel
