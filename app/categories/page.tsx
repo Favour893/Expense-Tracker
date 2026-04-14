@@ -6,7 +6,7 @@ import { RequireAuth } from "../../src/components/auth/RequireAuth";
 import { useAuth } from "../../src/components/auth/AuthProvider";
 import { useNotifications } from "../../src/components/notifications/NotificationProvider";
 import type { Category, CategoryType } from "../../src/types/app";
-import { createCategory, deleteCategory, listCategories } from "../../src/lib/repos/categoriesRepo";
+import { createCategory, deleteCategory, listCategories, updateCategory } from "../../src/lib/repos/categoriesRepo";
 import { PageLoadingShimmer } from "../../src/components/ui/PageLoadingShimmer";
 import { IncomeExpenseTabs, type IncomeExpenseTab } from "../../src/components/ui/IncomeExpenseTabs";
 
@@ -31,6 +31,8 @@ function Categories() {
   const [type, setType] = useState<CategoryType>("expense");
   const [searchText, setSearchText] = useState("");
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+  /** When set, the open modal saves changes to this category instead of creating one. */
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [initialLoad, setInitialLoad] = useState(true);
   const [listTab, setListTab] = useState<IncomeExpenseTab>("expense");
 
@@ -87,7 +89,7 @@ function Categories() {
     };
   }, [uid]);
 
-  async function onAdd(e: React.FormEvent, onSuccess?: () => void) {
+  async function onSaveCategory(e: React.FormEvent, onSuccess?: () => void) {
     e.preventDefault();
     if (!uid) return;
     const trimmed = name.trim();
@@ -96,15 +98,21 @@ function Categories() {
     setBusy(true);
     setError(null);
     try {
-      await createCategory(uid, { name: trimmed, type });
-      setName("");
+      if (editingCategoryId) {
+        await updateCategory(uid, editingCategoryId, { name: trimmed, type });
+        notifySuccess("Category updated.");
+      } else {
+        await createCategory(uid, { name: trimmed, type });
+        setName("");
+        notifySuccess("Category successfully added.");
+      }
+      setEditingCategoryId(null);
       await refresh();
-      notifySuccess("Category successfully added.");
       if (onSuccess) onSuccess();
     } catch (e: any) {
       const message = e?.message || String(e);
       setError(message);
-      notifyError(`Could not add category: ${message}`);
+      notifyError(editingCategoryId ? `Could not update category: ${message}` : `Could not add category: ${message}`);
     } finally {
       setBusy(false);
     }
@@ -131,7 +139,12 @@ function Categories() {
               <button
                 type="button"
                 className="et-btn-secondary inline-flex items-center gap-2 !min-h-10 !px-3 !py-2 text-sm"
-                onClick={() => setShowAddCategoryModal(true)}
+                onClick={() => {
+                  setEditingCategoryId(null);
+                  setName("");
+                  setType("expense");
+                  setShowAddCategoryModal(true);
+                }}
               >
                 <span className="text-lg font-bold">+</span>
                 Add category
@@ -194,19 +207,33 @@ function Categories() {
                           <div>
                             <div className="font-semibold">{c.name}</div>
                           </div>
-                          <button
-                            type="button"
-                            className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
-                            onClick={async () => {
-                              if (!uid) return;
-                              const ok = confirm("Delete category \"" + c.name + "\"?");
-                              if (!ok) return;
-                              await deleteCategory(uid, c.id);
-                              await refresh();
-                            }}
-                          >
-                            Delete
-                          </button>
+                          <div className="flex shrink-0 flex-wrap justify-end gap-1">
+                            <button
+                              type="button"
+                              className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                              onClick={() => {
+                                setEditingCategoryId(c.id);
+                                setName(c.name);
+                                setType(c.type);
+                                setShowAddCategoryModal(true);
+                              }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                              onClick={async () => {
+                                if (!uid) return;
+                                const ok = confirm("Delete category \"" + c.name + "\"?");
+                                if (!ok) return;
+                                await deleteCategory(uid, c.id);
+                                await refresh();
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -229,12 +256,18 @@ function Categories() {
           <div className="w-full max-w-3xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-white/10 dark:bg-slate-950">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Add category</h2>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Create a new category. The modal closes after save.</p>
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  {editingCategoryId ? "Edit category" : "Add category"}
+                </h2>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                  {editingCategoryId
+                    ? "Update the name or type, then save. The modal closes after save."
+                    : "Create a new category. The modal closes after save."}
+                </p>
               </div>
             </div>
 
-            <form className="mt-4 grid gap-3" onSubmit={(e) => onAdd(e, () => setShowAddCategoryModal(false))}>
+            <form className="mt-4 grid gap-3" onSubmit={(e) => onSaveCategory(e, () => setShowAddCategoryModal(false))}>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="grid gap-2">
                   <span className="text-sm text-slate-600 dark:text-slate-300">Type <span className="text-red-500">*</span></span>
@@ -266,9 +299,16 @@ function Categories() {
 
               <div className="flex flex-wrap items-center gap-3">
                 <button type="submit" className="et-btn-primary" disabled={busy || !name.trim()}>
-                  {busy ? "Adding..." : "Add category"}
+                  {busy ? "Saving..." : editingCategoryId ? "Save changes" : "Add category"}
                 </button>
-                <button type="button" className="et-btn-secondary" onClick={() => setShowAddCategoryModal(false)}>
+                <button
+                  type="button"
+                  className="et-btn-secondary"
+                  onClick={() => {
+                    setShowAddCategoryModal(false);
+                    setEditingCategoryId(null);
+                  }}
+                >
                   Cancel
                 </button>
                 {error ? <div className="text-sm text-red-200">{error}</div> : null}

@@ -7,7 +7,12 @@ import { RequireAuth } from "../../src/components/auth/RequireAuth";
 import { useAuth } from "../../src/components/auth/AuthProvider";
 import { useNotifications } from "../../src/components/notifications/NotificationProvider";
 import type { Category, Transaction, TransactionType } from "../../src/types/app";
-import { createTransaction, deleteTransaction, listTransactionsByMonth } from "../../src/lib/repos/entriesRepo";
+import {
+  createTransaction,
+  deleteTransaction,
+  listTransactionsByMonth,
+  updateTransaction
+} from "../../src/lib/repos/entriesRepo";
 import { listCategories } from "../../src/lib/repos/categoriesRepo";
 import { PageLoadingShimmer } from "../../src/components/ui/PageLoadingShimmer";
 import { IncomeExpenseTabs, type IncomeExpenseTab } from "../../src/components/ui/IncomeExpenseTabs";
@@ -25,6 +30,19 @@ function parseDateToUtcTimestamp(dateStr: string) {
   const [y, m, d] = String(dateStr || "").split("-");
   const dt = new Date(Date.UTC(Number(y), Number(m) - 1, Number(d), 0, 0, 0));
   return Timestamp.fromDate(dt);
+}
+
+function timestampToDateInputUtc(ts: unknown): string {
+  if (ts == null) return "";
+  const d =
+    typeof ts === "object" && ts !== null && "toDate" in ts && typeof (ts as { toDate: () => Date }).toDate === "function"
+      ? (ts as { toDate: () => Date }).toDate()
+      : new Date(ts as number);
+  if (Number.isNaN(d.getTime())) return "";
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 function currentMonthKey() {
@@ -93,6 +111,8 @@ function Entries() {
   const [description, setDescription] = useState<string>("");
   const [searchText, setSearchText] = useState<string>("");
   const [showAddTransactionModal, setShowAddTransactionModal] = useState(false);
+  /** When set, the open modal updates this transaction instead of creating one. */
+  const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null);
   const [currencyBusy, setCurrencyBusy] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [listTab, setListTab] = useState<IncomeExpenseTab>("expense");
@@ -200,7 +220,31 @@ function Entries() {
     }
   }, [typedCategories, categoryId]);
 
-  async function onAdd(e: React.FormEvent, onSuccess?: () => void) {
+  function openAddTransactionModal() {
+    setEditingTransactionId(null);
+    const dt = new Date();
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, "0");
+    const d = String(dt.getDate()).padStart(2, "0");
+    setDateStr(`${y}-${m}-${d}`);
+    setAmount("0");
+    setDescription("");
+    setShowAddTransactionModal(true);
+  }
+
+  function openEditTransactionModal(t: Transaction) {
+    setEditingTransactionId(t.id);
+    setEntryType(t.type);
+    setDateStr(timestampToDateInputUtc(t.date));
+    const raw = String(Number(t.amount ?? 0));
+    const formatted = formatAmountInput(raw);
+    setAmount(formatted != null ? formatted : raw);
+    setCategoryId(t.categoryId);
+    setDescription(t.description || "");
+    setShowAddTransactionModal(true);
+  }
+
+  async function onSaveTransaction(e: React.FormEvent, onSuccess?: () => void) {
     e.preventDefault();
     if (!uid) return;
     if (!dateStr || !categoryId) return;
@@ -212,28 +256,41 @@ function Entries() {
     try {
       const txDate = parseDateToUtcTimestamp(dateStr);
       const txType: TransactionType = entryType;
-
-      await createTransaction(uid, {
-        date: txDate,
-        amount: Math.abs(Number(amount.replace(/,/g, "")) || 0),
-        type: txType,
-        categoryId: cat.id,
-        description: description.trim() || undefined,
-        monthKey: monthKeyFromDateInput(dateStr)
-      });
-
-      // refresh current month if it matches
       const mk = monthKeyFromDateInput(dateStr);
-      if (mk === monthKey) await refreshTransactions(monthKey);
+      const amt = Math.abs(Number(amount.replace(/,/g, "")) || 0);
+      const descTrim = description.trim();
 
+      if (editingTransactionId) {
+        await updateTransaction(uid, editingTransactionId, {
+          date: txDate,
+          amount: amt,
+          type: txType,
+          categoryId: cat.id,
+          description: descTrim,
+          monthKey: mk
+        });
+        notifySuccess("Transaction updated.");
+      } else {
+        await createTransaction(uid, {
+          date: txDate,
+          amount: amt,
+          type: txType,
+          categoryId: cat.id,
+          description: descTrim || undefined,
+          monthKey: mk
+        });
+        notifySuccess("Transaction successfully added.");
+      }
+
+      setEditingTransactionId(null);
       setAmount("0");
       setDescription("");
-      notifySuccess("Transaction successfully added.");
+      await refreshTransactions(monthKey);
       if (onSuccess) onSuccess();
     } catch (e: any) {
       const message = e?.message || String(e);
       setError(message);
-      notifyError(`Could not add transaction: ${message}`);
+      notifyError(editingTransactionId ? `Could not update transaction: ${message}` : `Could not add transaction: ${message}`);
     } finally {
       setBusy(false);
     }
@@ -285,7 +342,7 @@ function Entries() {
                   <button
                     type="button"
                     className="et-btn-secondary inline-flex items-center gap-2 !min-h-10 !px-3 !py-2 text-sm"
-                    onClick={() => setShowAddTransactionModal(true)}
+                    onClick={openAddTransactionModal}
                   >
                     <span className="text-lg font-bold">+</span>
                     Add
@@ -382,7 +439,14 @@ function Entries() {
                           <div className="text-right">
                             <div className="text-sm font-bold">{amountStr}</div>
                             {t.description ? <div className="mt-1 text-xs text-slate-600 dark:text-slate-300">{t.description}</div> : null}
-                            <div className="mt-2">
+                            <div className="mt-2 flex flex-wrap justify-end gap-1">
+                              <button
+                                type="button"
+                                className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                                onClick={() => openEditTransactionModal(t)}
+                              >
+                                Edit
+                              </button>
                               <button
                                 type="button"
                                 className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
@@ -420,12 +484,18 @@ function Entries() {
           <div className="w-full max-w-4xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-white/10 dark:bg-slate-950">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Add transaction</h2>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Enter a new income or expense item. The modal will close after you save.</p>
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+                  {editingTransactionId ? "Edit transaction" : "Add transaction"}
+                </h2>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                  {editingTransactionId
+                    ? "Change any field and save. The modal closes after save."
+                    : "Enter a new income or expense item. The modal will close after you save."}
+                </p>
               </div>
             </div>
 
-            <form className="mt-4 grid gap-3" onSubmit={(e) => onAdd(e, () => setShowAddTransactionModal(false))}>
+            <form className="mt-4 grid gap-3" onSubmit={(e) => onSaveTransaction(e, () => setShowAddTransactionModal(false))}>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 <label className="grid gap-2">
                   <span className="text-sm text-slate-600 dark:text-slate-300">Category type <span className="text-red-500">*</span></span>
@@ -511,9 +581,16 @@ function Entries() {
 
               <div className="flex flex-wrap items-center gap-3">
                 <button className="et-btn-primary" type="submit" disabled={busy || !selectedCategory}>
-                  {busy ? "Saving..." : "Add entry"}
+                  {busy ? "Saving..." : editingTransactionId ? "Save changes" : "Add entry"}
                 </button>
-                <button type="button" className="et-btn-secondary" onClick={() => setShowAddTransactionModal(false)}>
+                <button
+                  type="button"
+                  className="et-btn-secondary"
+                  onClick={() => {
+                    setShowAddTransactionModal(false);
+                    setEditingTransactionId(null);
+                  }}
+                >
                   Cancel
                 </button>
               </div>

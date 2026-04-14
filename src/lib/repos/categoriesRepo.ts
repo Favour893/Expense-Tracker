@@ -1,8 +1,24 @@
-import { addDoc, collection, deleteDoc, doc, getDocs, orderBy, query, serverTimestamp, type DocumentData } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  orderBy,
+  query,
+  serverTimestamp,
+  updateDoc,
+  type DocumentData
+} from "firebase/firestore";
 import { db } from "../firebaseClient";
 import type { Category } from "../../types/app";
 
 export type CategoryCreateInput = {
+  name: string;
+  type: "income" | "expense";
+};
+
+export type CategoryUpdateInput = {
   name: string;
   type: "income" | "expense";
 };
@@ -25,5 +41,13 @@ export async function createCategory(uid: string, data: CategoryCreateInput) {
 
 export async function deleteCategory(uid: string, categoryId: string) {
   await deleteDoc(doc(db, "users", uid, "categories", categoryId));
+}
+
+export async function updateCategory(uid: string, categoryId: string, data: CategoryUpdateInput) {
+  await updateDoc(doc(db, "users", uid, "categories", categoryId), {
+    name: data.name.trim(),
+    type: data.type,
+    updatedAt: serverTimestamp()
+  });
 }
 

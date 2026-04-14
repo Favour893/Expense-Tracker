@@ -8,6 +8,7 @@ import {
   query,
   serverTimestamp,
   Timestamp,
+  updateDoc,
   where,
   type DocumentData
 } from "firebase/firestore";
@@ -121,5 +122,27 @@ export async function createTransaction(uid: string, input: Omit<TransactionCrea
 
 export async function deleteTransaction(uid: string, transactionId: string) {
   await deleteDoc(doc(db, "users", uid, "transactions", transactionId));
+}
+
+export type TransactionUpdateInput = {
+  date: Timestamp;
+  amount: number;
+  type: TransactionType;
+  categoryId: string;
+  description: string;
+  monthKey: string;
+};
+
+export async function updateTransaction(uid: string, transactionId: string, input: TransactionUpdateInput) {
+  const ref = doc(db, "users", uid, "transactions", transactionId);
+  await updateDoc(ref, {
+    date: input.date,
+    amount: input.amount,
+    type: input.type,
+    categoryId: input.categoryId,
+    description: input.description,
+    monthKey: input.monthKey,
+    updatedAt: serverTimestamp()
+  });
 }
 

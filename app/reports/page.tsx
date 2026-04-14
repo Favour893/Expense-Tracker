@@ -17,6 +17,7 @@ import { ReportPreview } from "../../src/components/reports/ReportPreview";
 import { ExportPdfButton } from "../../src/components/reports/ExportPdfButton";
 import { PageLoadingShimmer } from "../../src/components/ui/PageLoadingShimmer";
 import { formatUkDate } from "../../src/lib/formatDisplayDate";
+import { firestoreTimestampMs } from "../../src/lib/firestoreHelpers";
 import { CashLogo } from "../../src/components/branding/CashLogo";
 
 function toIsoLocal(d: Date): string {
@@ -31,6 +32,14 @@ function defaultDateRange(): { start: string; end: string } {
     start: toIsoLocal(new Date(y, m, 1)),
     end: toIsoLocal(new Date(y, m + 1, 0))
   };
+}
+
+/** Newest first: prefer `createdAt` when present, else transaction `date`; stable tie-break on `id`. */
+function compareTransactionsNewestFirst(a: Transaction, b: Transaction): number {
+  const msA = firestoreTimestampMs(a.createdAt) || firestoreTimestampMs(a.date);
+  const msB = firestoreTimestampMs(b.createdAt) || firestoreTimestampMs(b.date);
+  if (msB !== msA) return msB - msA;
+  return b.id.localeCompare(a.id);
 }
 
 function formatMoney(value: number, currency: string) {
@@ -71,10 +80,12 @@ function Reports() {
 
   const reportMonthKey = rangeStart.slice(0, 7);
 
-  const periodLabel = useMemo(
-    () => formatReportDateRangeLabel(rangeStart, rangeEnd, "en-GB"),
-    [rangeStart, rangeEnd]
-  );
+  const rangeValid = Boolean(rangeStart && rangeEnd && rangeStart <= rangeEnd);
+
+  const periodLabel = useMemo(() => {
+    if (!rangeValid) return "";
+    return formatReportDateRangeLabel(rangeStart, rangeEnd, "en-GB");
+  }, [rangeEnd, rangeStart, rangeValid]);
 
   const report = useMemo(() => {
     if (!categories) return null;
@@ -116,13 +127,13 @@ function Reports() {
   );
 
   const narrativeText = useMemo(() => {
-    if (!report) return "";
+    if (!report || !rangeValid) return "";
     const hasLastMonth = lastMonthTransactions.length > 0;
     return renderNarrative({
       report,
       currency,
       monthKey: reportMonthKey,
-      periodLabel,
+      periodLabel: periodLabel || undefined,
       hasLastMonth,
       locale: "en-GB",
       top3PercentSumRounded1Override: top3PercentSumRoundedFromTable,
@@ -135,17 +146,14 @@ function Reports() {
     periodLabel,
     report,
     reportMonthKey,
-    top3PercentSumRoundedFromTable
+    top3PercentSumRoundedFromTable,
+    rangeValid
   ]);
 
-  /** Full month, all expense rows — included in PDF export (#report-root). */
+  /** All expense rows in the selected range — included in PDF export (#report-root). */
   const pdfExpenseRows = useMemo(() => {
     const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
-    const sorted = expenseTransactions.slice().sort((a, b) => {
-      const dateA = a.date?.toMillis ? a.date.toMillis() : 0;
-      const dateB = b.date?.toMillis ? b.date.toMillis() : 0;
-      return dateB - dateA;
-    });
+    const sorted = expenseTransactions.slice().sort(compareTransactionsNewestFirst);
     const total = sorted.reduce((s, t) => s + Number(t.amount || 0), 0);
     return sorted.map((t) => {
       const amount = Number(t.amount || 0);
@@ -163,11 +171,7 @@ function Reports() {
   const tableRows = useMemo(() => {
     const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
 
-    const sorted = filteredExpenseTransactions.slice().sort((a, b) => {
-      const dateA = a.date?.toMillis ? a.date.toMillis() : 0;
-      const dateB = b.date?.toMillis ? b.date.toMillis() : 0;
-      return dateB - dateA;
-    });
+    const sorted = filteredExpenseTransactions.slice().sort(compareTransactionsNewestFirst);
 
     const totalExpenseAmount = sorted.reduce((sum, t) => sum + Number(t.amount || 0), 0);
 
@@ -210,6 +214,12 @@ function Reports() {
     return () => window.removeEventListener("keydown", onKey);
   }, [narrativeOpen]);
 
+  useEffect(() => {
+    setNarrativeOpen(false);
+  }, [rangeStart, rangeEnd]);
+
+  const exportActionsEnabled = rangeValid && !busy && Boolean(report);
+
   async function loadAll(startIso: string, endIso: string) {
     if (!uid) return;
     setBusy(true);
@@ -241,6 +251,11 @@ function Reports() {
 
   useEffect(() => {
     if (!uid) return;
+    if (!rangeStart || !rangeEnd || rangeStart > rangeEnd) {
+      setTransactions([]);
+      setLastMonthTransactions([]);
+      return;
+    }
     loadAll(rangeStart, rangeEnd).catch((e) => setError(e?.message || String(e)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uid, rangeStart, rangeEnd]);
@@ -248,53 +263,68 @@ function Reports() {
   return (
     <div className="flex h-0 min-h-0 w-full min-w-0 flex-1 flex-col gap-0.5 overflow-hidden sm:gap-1">
       <div className="shrink-0 flex flex-col gap-0.5 sm:gap-1">
-        <div className="flex w-full flex-row flex-wrap items-center justify-between gap-1.5">
-          <div className="flex min-w-0 flex-1 flex-row flex-wrap items-center gap-1.5 sm:gap-2">
-            <div className="flex min-w-0 flex-1 flex-row flex-wrap items-center gap-2 text-[11px] text-slate-600 dark:text-slate-300 sm:flex-initial sm:gap-2 sm:text-sm">
-              <label className="flex min-w-0 flex-1 flex-row flex-wrap items-center gap-1.5 sm:flex-initial">
-                <span className="shrink-0 font-medium">From</span>
-                <input
-                  className="et-input min-h-10 min-w-0 flex-1 !px-3 !py-2 text-sm sm:min-w-[9.5rem]"
-                  type="date"
-                  value={rangeStart}
-                  max={rangeEnd}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setRangeStart(v);
-                    if (v && rangeEnd && v > rangeEnd) setRangeEnd(v);
-                  }}
-                />
-              </label>
-              <label className="flex min-w-0 flex-1 flex-row flex-wrap items-center gap-1.5 sm:flex-initial">
-                <span className="shrink-0 font-medium">To</span>
-                <input
-                  className="et-input min-h-10 min-w-0 flex-1 !px-3 !py-2 text-sm sm:min-w-[9.5rem]"
-                  type="date"
-                  value={rangeEnd}
-                  min={rangeStart}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setRangeEnd(v);
-                    if (v && rangeStart && v < rangeStart) setRangeStart(v);
-                  }}
-                />
-              </label>
+        <div className="flex w-full flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
+          <div className="flex min-w-0 flex-1 flex-col gap-1 sm:gap-1.5">
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+              <div className="flex min-w-0 flex-1 flex-row flex-wrap items-center gap-2 text-[11px] text-slate-600 dark:text-slate-300 sm:flex-initial sm:gap-2 sm:text-sm">
+                <label className="flex min-w-0 flex-1 flex-row flex-wrap items-center gap-1.5 sm:flex-initial">
+                  <span className="shrink-0 font-medium">From</span>
+                  <input
+                    className="et-input min-h-10 min-w-0 flex-1 !px-3 !py-2 text-sm sm:min-w-[9.5rem]"
+                    type="date"
+                    aria-label="Report date range start"
+                    value={rangeStart}
+                    max={rangeEnd || undefined}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setRangeStart(v);
+                      if (v && rangeEnd && v > rangeEnd) setRangeEnd(v);
+                    }}
+                  />
+                </label>
+                <label className="flex min-w-0 flex-1 flex-row flex-wrap items-center gap-1.5 sm:flex-initial">
+                  <span className="shrink-0 font-medium">To</span>
+                  <input
+                    className="et-input min-h-10 min-w-0 flex-1 !px-3 !py-2 text-sm sm:min-w-[9.5rem]"
+                    type="date"
+                    aria-label="Report date range end"
+                    value={rangeEnd}
+                    min={rangeStart || undefined}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setRangeEnd(v);
+                      if (v && rangeStart && v < rangeStart) setRangeStart(v);
+                    }}
+                  />
+                </label>
+              </div>
             </div>
+            {periodLabel ? (
+              <p className="truncate text-[11px] text-slate-500 dark:text-slate-400 sm:text-xs" title={periodLabel}>
+                Period: <span className="font-medium text-slate-600 dark:text-slate-300">{periodLabel}</span>
+              </p>
+            ) : rangeStart || rangeEnd ? (
+              <p className="text-[11px] text-amber-700 dark:text-amber-200/90 sm:text-xs">
+                Choose a valid range (From on or before To, both dates set).
+              </p>
+            ) : null}
+          </div>
+          <div className="flex shrink-0 flex-row flex-wrap items-center justify-end gap-1.5">
             <button
               type="button"
-              className="et-btn-secondary shrink-0 !min-h-10 whitespace-nowrap px-3 py-2 text-xs font-semibold sm:text-sm"
-              disabled={busy || !report}
+              className="et-btn-secondary !min-h-10 whitespace-nowrap px-3 py-2 text-xs font-semibold sm:text-sm"
+              disabled={!exportActionsEnabled}
               onClick={() => setNarrativeOpen(true)}
             >
               Narrative
             </button>
+            <ExportPdfButton
+              exportFilenameBase={`${rangeStart}_${rangeEnd}`}
+              currency={currency}
+              disabled={!exportActionsEnabled}
+              buttonClassName="rounded-lg !min-h-10 px-3 py-1 text-xs font-semibold sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-sm"
+            />
           </div>
-          <ExportPdfButton
-            exportFilenameBase={`${rangeStart}_${rangeEnd}`}
-            currency={currency}
-            disabled={busy || !report}
-            buttonClassName="shrink-0 rounded-lg !min-h-10 px-3 py-1 text-xs font-semibold sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-sm"
-          />
         </div>
       </div>
 
@@ -490,9 +520,16 @@ function Reports() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-4 py-3 dark:border-white/10">
-              <h2 id="narrative-dialog-title" className="text-base font-bold text-indigo-700 dark:text-indigo-300">
-                Narrative
-              </h2>
+              <div className="min-w-0 pr-2">
+                <h2 id="narrative-dialog-title" className="text-base font-bold text-indigo-700 dark:text-indigo-300">
+                  Narrative
+                </h2>
+                {periodLabel ? (
+                  <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400" title={periodLabel}>
+                    {periodLabel}
+                  </p>
+                ) : null}
+              </div>
               <button
                 type="button"
                 className="et-btn-secondary !min-h-9 px-3 py-1.5 text-xs font-semibold sm:text-sm"
