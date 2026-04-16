@@ -108,7 +108,7 @@ export function ExportPdfButton({
 
       let watermarkPng: string | null = null;
       try {
-        watermarkPng = await svgToPngDataUrl(cashLogoSvgMarkup(), { sizePx: 700, alpha: 0.045 });
+        watermarkPng = await svgToPngDataUrl(cashLogoSvgMarkup(), { sizePx: 700, alpha: 0.02 });
       } catch {
         watermarkPng = null;
       }

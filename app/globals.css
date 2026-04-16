@@ -151,6 +151,29 @@ body.pdf-export #report-root td {
   border-color: rgba(0, 0, 0, 0.15) !important;
 }
 
+/* Keep all report text readable across devices/PDF viewers. */
+body.pdf-export #report-root,
+body.pdf-export #report-root h1,
+body.pdf-export #report-root h2,
+body.pdf-export #report-root h3,
+body.pdf-export #report-root h4,
+body.pdf-export #report-root p,
+body.pdf-export #report-root span,
+body.pdf-export #report-root div,
+body.pdf-export #report-root li,
+body.pdf-export #report-root strong,
+body.pdf-export #report-root small {
+  color: #111827 !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+
+/* SVG text in charts should remain dark and crisp. */
+body.pdf-export #report-root svg text {
+  fill: #111827 !important;
+  opacity: 1 !important;
+}
+
 body.pdf-export #report-root {
   background: #ffffff !important;
   color: #000000 !important;
