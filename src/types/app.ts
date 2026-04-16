@@ -12,7 +12,7 @@ export type TransactionType = "income" | "expense";
 export type Transaction = {
   id: string;
   date: any; // Firestore Timestamp
-  /** Set when the document was created; used for “newest first” ordering on reports. */
+  /** Set when the document was created; tie-break for same-day rows on reports. */
   createdAt?: unknown;
   updatedAt?: unknown;
   amount: number;

@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 
 function cashLogoSvgMarkup() {
-  // Inline SVG so we can render it to a canvas for watermarking.
   return `
 <svg width="256" height="256" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -34,7 +33,7 @@ function cashLogoSvgMarkup() {
 
 async function svgToPngDataUrl(svgMarkup: string, opts?: { sizePx?: number; alpha?: number }) {
   const sizePx = opts?.sizePx ?? 512;
-  const alpha = opts?.alpha ?? 0.08;
+  const alpha = opts?.alpha ?? 0.12;
 
   const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgMarkup)}`;
   const img = new Image();
@@ -104,20 +103,19 @@ export function ExportPdfButton({
       const pdf: any = await worker.toPdf().get("pdf");
       const pageCount: number = pdf?.internal?.getNumberOfPages?.() ?? 0;
 
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
       let watermarkPng: string | null = null;
       try {
-        watermarkPng = await svgToPngDataUrl(cashLogoSvgMarkup(), { sizePx: 700, alpha: 0.06 });
+        watermarkPng = await svgToPngDataUrl(cashLogoSvgMarkup(), { sizePx: 700, alpha: 0.045 });
       } catch {
         watermarkPng = null;
       }
 
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-
       for (let i = 1; i <= pageCount; i += 1) {
         pdf.setPage(i);
 
-        // Watermark (faint logo) on every page.
         if (watermarkPng) {
           const wmW = Math.min(4.4, pageWidth * 0.62);
           const wmH = wmW;

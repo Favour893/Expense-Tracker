@@ -34,11 +34,14 @@ function defaultDateRange(): { start: string; end: string } {
   };
 }
 
-/** Newest first: prefer `createdAt` when present, else transaction `date`; stable tie-break on `id`. */
+/** Newest-first by ledger **date** (matches the Date column), then `createdAt`, then `id`. */
 function compareTransactionsNewestFirst(a: Transaction, b: Transaction): number {
-  const msA = firestoreTimestampMs(a.createdAt) || firestoreTimestampMs(a.date);
-  const msB = firestoreTimestampMs(b.createdAt) || firestoreTimestampMs(b.date);
-  if (msB !== msA) return msB - msA;
+  const dateA = firestoreTimestampMs(a.date);
+  const dateB = firestoreTimestampMs(b.date);
+  if (dateB !== dateA) return dateB - dateA;
+  const createdA = firestoreTimestampMs(a.createdAt);
+  const createdB = firestoreTimestampMs(b.createdAt);
+  if (createdB !== createdA) return createdB - createdA;
   return b.id.localeCompare(a.id);
 }
 

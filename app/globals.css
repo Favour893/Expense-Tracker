@@ -139,7 +139,8 @@ body.pdf-export {
 }
 
 body.pdf-export #report-root,
-body.pdf-export #report-root * {
+/* Flatten card backgrounds for capture — but keep pie legend swatches (inline fill). */
+body.pdf-export #report-root *:not(.report-legend-swatch) {
   background: transparent !important;
 }
 
@@ -212,6 +213,24 @@ body.pdf-export #report-root .report-narrative-text {
   line-clamp: unset !important;
   display: block !important;
   overflow: visible !important;
+}
+
+/*
+ * Expense pie legend: keep PDF capture rules minimal.
+ * Do NOT override line-height / flex alignment here — html2canvas uses the live DOM;
+ * different metrics than the report page caused “fix PDF breaks screen” toggling.
+ */
+body.pdf-export #report-root .report-legend-stack,
+body.pdf-export #report-root .report-legend-chunk,
+body.pdf-export #report-root .report-legend-table,
+body.pdf-export #report-root .report-legend-swatch-cell,
+body.pdf-export #report-root .report-legend-label-cell {
+  overflow: visible !important;
+}
+
+body.pdf-export #report-root .report-legend-swatch {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
 }
 
 body.pdf-export table.report-table th,
