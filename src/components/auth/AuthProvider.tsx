@@ -377,6 +377,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   <NavLink href="/categories" label="Categories" active={pathname === "/categories"} />
                   <NavLink href="/entries" label="Entries" active={pathname === "/entries"} />
                   <NavLink href="/reports" label="Reports" active={pathname === "/reports"} />
+                  {userDoc?.role === "admin" ? <NavLink href="/dashboard" label="Dashboard" active={pathname === "/dashboard"} /> : null}
                 </div>
               </nav>
             </div>

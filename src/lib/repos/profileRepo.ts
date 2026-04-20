@@ -16,6 +16,7 @@ export type UserDocument = {
   displayName?: string;
   photoURL?: string | null;
   preferredCurrency: string;
+  role?: "admin" | "user";
 };
 
 export async function saveProfile(uid: string, profile: UserProfile) {
