@@ -127,28 +127,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
-      if (u) {
-        const existingUser = await getUserDocument(u.uid);
-        const preferredCurrency = existingUser?.preferredCurrency || "USD";
-        const providerPhoto = firstProviderPhoto(u);
-        const photoURL = u.photoURL || providerPhoto || existingUser?.photoURL || null;
-        const displayName = u.displayName || firstProviderDisplayName(u) || existingUser?.displayName || "";
+      try {
+        if (u) {
+          const existingUser = await getUserDocument(u.uid);
+          const preferredCurrency = existingUser?.preferredCurrency || "USD";
+          const providerPhoto = firstProviderPhoto(u);
+          const photoURL = u.photoURL || providerPhoto || existingUser?.photoURL || null;
+          const displayName = u.displayName || firstProviderDisplayName(u) || existingUser?.displayName || "";
 
-        await saveUserDocument(u.uid, {
-          email: u.email || "",
-          displayName,
-          photoURL,
-          preferredCurrency
-        });
+          await saveUserDocument(u.uid, {
+            email: u.email || "",
+            displayName,
+            photoURL,
+            preferredCurrency
+          });
 
-        const p = await getProfile(u.uid);
-        setProfile(p);
-        setUserDoc(await getUserDocument(u.uid));
-      } else {
+          const p = await getProfile(u.uid);
+          setProfile(p);
+          setUserDoc(await getUserDocument(u.uid));
+        } else {
+          setProfile(null);
+          setUserDoc(null);
+        }
+      } catch (error) {
+        // Keep the app accessible even if profile/userDoc sync fails in production.
+        console.error("AuthProvider bootstrap failed:", error);
         setProfile(null);
         setUserDoc(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
     return () => unsub();
   }, []);
