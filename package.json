@@ -16,6 +16,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@ducanh2912/next-pwa": "^10.2.9",
     "@mdi/js": "^7.4.47",
     "@types/html2pdf.js": "^0.10.0",
     "@types/node": "^20.14.10",

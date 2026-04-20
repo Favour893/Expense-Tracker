@@ -51,6 +51,16 @@ Thumbs.db
 # Optional: coverage reports
 coverage/
 
+# PWA / Workbox (generated during production build)
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/workbox-*.js.map
+public/worker-*.js
+public/worker-*.js.map
+public/swe-worker-*.js
+public/fallback-*.js
+
 # Optional: lock files (uncomment if you don’t want to track them)
 # package-lock.json
 # yarn.lock
