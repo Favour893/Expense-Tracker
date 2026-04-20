@@ -10,6 +10,7 @@ import { collection, deleteDoc, doc, getDocs } from "firebase/firestore";
 import { auth, db } from "../../lib/firebaseClient";
 import { getProfile, getUserDocument, saveUserDocument, type UserProfile, type UserDocument } from "../../lib/repos/profileRepo";
 import { CashLogo } from "../branding/CashLogo";
+import { VoluntaryReviewButton } from "../feedback/VoluntaryReviewButton";
 
 type AuthContextValue = {
   user: User | null;
@@ -378,6 +379,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   <NavLink href="/entries" label="Entries" active={pathname === "/entries"} />
                   <NavLink href="/reports" label="Reports" active={pathname === "/reports"} />
                   {userDoc?.role === "admin" ? <NavLink href="/dashboard" label="Dashboard" active={pathname === "/dashboard"} /> : null}
+                  <VoluntaryReviewButton />
                 </div>
               </nav>
             </div>

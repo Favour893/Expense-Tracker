@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { RequireAuth } from "../../src/components/auth/RequireAuth";
 import { useAuth } from "../../src/components/auth/AuthProvider";
-import { createReviewRequest, listDirectoryUsers, type DirectoryUser } from "../../src/lib/repos/adminRepo";
 import {
   getAdminStatsSummary,
   listAdminStatsMonthly,
@@ -21,54 +20,34 @@ export default function DashboardPage() {
 }
 
 function Dashboard() {
-  const { user, userDoc, loading } = useAuth();
-  const uid = user?.uid;
+  const { userDoc, loading } = useAuth();
   const isAdmin = userDoc?.role === "admin";
   const currency = userDoc?.preferredCurrency || "USD";
 
-  const [rows, setRows] = useState<DirectoryUser[]>([]);
   const [summary, setSummary] = useState<AdminStatsSummary | null>(null);
   const [monthly, setMonthly] = useState<AdminStatsMonthly[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
 
   async function refresh() {
-    if (!uid || !isAdmin) return;
+    if (!isAdmin) return;
     setBusy(true);
     setError(null);
     try {
-      const [users, statsSummary, statsMonthly] = await Promise.all([
-        listDirectoryUsers(),
-        getAdminStatsSummary(),
-        listAdminStatsMonthly(6)
-      ]);
-      setRows(users);
+      const [statsSummary, statsMonthly] = await Promise.all([getAdminStatsSummary(), listAdminStatsMonthly(6)]);
       setSummary(statsSummary);
       setMonthly(statsMonthly);
-    } catch (e: any) {
-      setError(e?.message || String(e));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
     }
   }
 
   useEffect(() => {
-    refresh().catch((e) => setError(e?.message || String(e)));
+    refresh().catch((e) => setError(e instanceof Error ? e.message : String(e)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uid, isAdmin]);
-
-  async function onRequestReview(target: DirectoryUser) {
-    if (!uid) return;
-    setMessage(null);
-    setError(null);
-    try {
-      await createReviewRequest(uid, target);
-      setMessage(`Review request created for ${target.email}.`);
-    } catch (e: any) {
-      setError(e?.message || String(e));
-    }
-  }
+  }, [isAdmin]);
 
   if (loading) {
     return (
@@ -89,36 +68,58 @@ function Dashboard() {
   return (
     <div className="flex h-0 min-h-0 w-full flex-1 flex-col gap-2 overflow-hidden">
       <section className="et-card shrink-0">
-        <h2 className="text-xl font-semibold">Admin dashboard</h2>
-        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">View users and create review requests.</p>
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h2 className="text-xl font-semibold">Admin dashboard</h2>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              Aggregate usage of the app — no individual accounts are listed here.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+            onClick={() => refresh()}
+            disabled={busy}
+          >
+            {busy ? "Refreshing..." : "Refresh"}
+          </button>
+        </div>
       </section>
 
-      <section className="et-card shrink-0">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Analytics</h3>
+      <section className="et-card flex h-0 min-h-0 flex-1 flex-col overflow-hidden">
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">App usage</h3>
+        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+          Totals come from aggregate docs under <code className="text-[0.7rem]">adminStats</code> (maintained outside the client).
+        </p>
+
+        {error ? (
+          <div className="mt-2 shrink-0 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</div>
+        ) : null}
+
         {!summary ? (
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
             No aggregate stats yet. Populate Firestore docs under <code>adminStats/summary</code> and{" "}
             <code>adminStats/monthly/rows</code> to enable these cards.
           </p>
         ) : (
           <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <MetricCard label="Users" value={String(summary.totalUsers)} />
-            <MetricCard label="Transactions" value={String(summary.totalTransactions)} />
-            <MetricCard label="Expense total" value={formatMoney(summary.totalExpenseAmount, currency)} />
-            <MetricCard label="Income total" value={formatMoney(summary.totalIncomeAmount, currency)} />
+            <MetricCard label="Registered accounts" value={String(summary.totalUsers)} />
+            <MetricCard label="Entries logged (all time)" value={String(summary.totalTransactions)} />
+            <MetricCard label="Expense volume (total)" value={formatMoney(summary.totalExpenseAmount, currency)} />
+            <MetricCard label="Income volume (total)" value={formatMoney(summary.totalIncomeAmount, currency)} />
           </div>
         )}
 
         {monthly.length ? (
-          <div className="mt-3 overflow-auto rounded-lg border border-slate-200 dark:border-white/10">
-            <table className="w-full min-w-[32rem] text-xs sm:text-sm">
+          <div className="mt-3 min-h-0 flex-1 overflow-auto rounded-lg border border-slate-200 dark:border-white/10">
+            <table className="w-full min-w-[28rem] text-xs sm:text-sm">
               <thead className="bg-slate-50 text-left text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                 <tr>
                   <th className="px-3 py-2 font-semibold">Month</th>
-                  <th className="px-3 py-2 font-semibold">New users</th>
-                  <th className="px-3 py-2 font-semibold">Transactions</th>
-                  <th className="px-3 py-2 font-semibold">Expenses</th>
-                  <th className="px-3 py-2 font-semibold">Income</th>
+                  <th className="px-3 py-2 font-semibold">New sign-ups</th>
+                  <th className="px-3 py-2 font-semibold">Entries</th>
+                  <th className="px-3 py-2 font-semibold">Expense volume</th>
+                  <th className="px-3 py-2 font-semibold">Income volume</th>
                 </tr>
               </thead>
               <tbody>
@@ -135,58 +136,6 @@ function Dashboard() {
             </table>
           </div>
         ) : null}
-      </section>
-
-      <section className="et-card flex h-0 min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="mb-2 flex shrink-0 items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Users</h3>
-          <button
-            type="button"
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
-            onClick={() => refresh()}
-            disabled={busy}
-          >
-            {busy ? "Refreshing..." : "Refresh"}
-          </button>
-        </div>
-
-        {error ? <div className="mb-2 shrink-0 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</div> : null}
-        {message ? <div className="mb-2 shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{message}</div> : null}
-
-        <div className="min-h-0 flex-1 overflow-auto rounded-lg border border-slate-200 dark:border-white/10">
-          {!rows.length ? (
-            <div className="p-4 text-sm text-slate-600 dark:text-slate-300">{busy ? "Loading users..." : "No users found."}</div>
-          ) : (
-            <table className="w-full min-w-[40rem] border-collapse text-sm">
-              <thead className="sticky top-0 bg-slate-50 text-left text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                <tr>
-                  <th className="px-3 py-2 font-semibold">Email</th>
-                  <th className="px-3 py-2 font-semibold">Display name</th>
-                  <th className="px-3 py-2 font-semibold">Role</th>
-                  <th className="px-3 py-2 font-semibold">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.id} className="border-t border-slate-200 dark:border-white/10">
-                    <td className="px-3 py-2">{row.email}</td>
-                    <td className="px-3 py-2">{row.displayName || "-"}</td>
-                    <td className="px-3 py-2">{row.role || "user"}</td>
-                    <td className="px-3 py-2">
-                      <button
-                        type="button"
-                        className="rounded-md border border-indigo-200 bg-indigo-50 px-2 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
-                        onClick={() => onRequestReview(row)}
-                      >
-                        Request review
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
       </section>
     </div>
   );

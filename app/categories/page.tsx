@@ -134,11 +134,25 @@ function Categories() {
       ) : (
         <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
           <div className="et-card !p-2 sm:!p-3 flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
-            <div className="flex shrink-0 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="text-base font-semibold">Your categories</h2>
+            <div className="flex shrink-0 flex-wrap items-stretch gap-2">
+              <input
+                className="et-search min-w-0 flex-1"
+                placeholder="Search categories"
+                title="Search by category name or type"
+                list="category-search-suggestions"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
               <button
                 type="button"
-                className="et-btn-secondary inline-flex items-center gap-2 !min-h-10 !px-3 !py-2 text-sm"
+                className="et-btn-secondary min-w-[5.5rem] shrink-0 !min-h-10 !px-3 !py-2 text-sm"
+                onClick={() => setSearchText("")}
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                className="et-btn-secondary inline-flex shrink-0 items-center gap-2 !min-h-10 !px-3 !py-2 text-sm"
                 onClick={() => {
                   setEditingCategoryId(null);
                   setName("");
@@ -148,24 +162,6 @@ function Categories() {
               >
                 <span className="text-lg font-bold">+</span>
                 Add category
-              </button>
-            </div>
-
-            <div className="mt-2 flex shrink-0 flex-col gap-1 sm:flex-row sm:items-stretch">
-              <input
-                className="et-search flex-1"
-                placeholder="Search categories"
-                title="Search by category name or type"
-                list="category-search-suggestions"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-              />
-              <button
-                type="button"
-                className="et-btn-secondary min-w-[5.5rem] shrink-0 sm:w-auto !min-h-10 !px-3 !py-2 text-sm"
-                onClick={() => setSearchText("")}
-              >
-                Clear
               </button>
             </div>
 

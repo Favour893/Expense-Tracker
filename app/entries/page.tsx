@@ -387,36 +387,29 @@ function Entries() {
       ) : (
         <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
           <div className="et-card !p-2 sm:!p-3 flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
-            <div className="flex shrink-0 flex-col gap-0.5">
-              <div>
-                <div className="flex flex-wrap items-center gap-0.5">
-                  <h2 className="text-base font-semibold">Transactions</h2>
-                  <button
-                    type="button"
-                    className="et-btn-secondary inline-flex items-center gap-2 !min-h-10 !px-3 !py-2 text-sm"
-                    onClick={openAddTransactionModal}
-                  >
-                    <span className="text-lg font-bold">+</span>
-                    Add
-                  </button>
-                </div>
-                <div className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">{filteredTransactions.length} items</div>
-              </div>
-
-              <div className="flex w-full flex-row flex-wrap items-center gap-2">
-                <label className="flex min-w-[12rem] flex-1 flex-row flex-wrap items-center justify-start gap-2 text-xs text-slate-600 dark:text-slate-300 sm:text-sm">
+            <div className="flex shrink-0 flex-col gap-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  className="et-btn-secondary inline-flex shrink-0 items-center gap-2 !min-h-10 !px-3 !py-2 text-sm"
+                  onClick={openAddTransactionModal}
+                >
+                  <span className="text-lg font-bold">+</span>
+                  Add
+                </button>
+                <label className="flex min-w-[10rem] flex-1 items-center gap-2 text-xs text-slate-600 dark:text-slate-300 sm:min-w-[12rem] sm:text-sm">
                   <span className="shrink-0 font-medium">Month</span>
                   <input
-                    className="et-input min-w-0 flex-1 !min-h-[2.5rem] !px-3 !py-2 text-sm sm:w-auto sm:flex-initial sm:min-w-[10rem]"
+                    className="et-input min-w-0 flex-1 !min-h-[2.5rem] !px-3 !py-2 text-sm sm:max-w-[11rem]"
                     type="month"
                     value={monthKey}
                     onChange={(e) => setMonthKey(e.target.value)}
                   />
                 </label>
-                <label className="ml-auto flex shrink-0 flex-row flex-wrap items-center justify-end gap-2 text-xs text-slate-600 dark:text-slate-300 sm:text-sm">
+                <label className="flex shrink-0 items-center gap-2 text-xs text-slate-600 dark:text-slate-300 sm:text-sm">
                   <span className="shrink-0 font-medium">Currency</span>
                   <select
-                    className="et-input min-w-[10rem] !min-h-[2.5rem] !px-3 !py-2 text-sm sm:min-w-[12rem]"
+                    className="et-input min-w-[8rem] !min-h-[2.5rem] !px-3 !py-2 text-sm sm:min-w-[10rem]"
                     value={currency}
                     disabled={currencyBusy}
                     onChange={(e) => onCurrencyChange(e.target.value)}
@@ -429,25 +422,28 @@ function Entries() {
                     ))}
                   </select>
                 </label>
+                <span className="ml-auto shrink-0 text-xs text-slate-600 dark:text-slate-300 sm:text-sm">
+                  {filteredTransactions.length} items
+                </span>
               </div>
-            </div>
 
-            <div className="mt-1 flex shrink-0 flex-col gap-0.5 sm:flex-row sm:items-stretch">
-              <input
-                className="et-search flex-1 !min-h-[2.5rem] !px-3 !py-2 text-sm"
-                placeholder="Search transactions"
-                title="Search by category, description, date or amount"
-                list="entry-search-suggestions"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-              />
-              <button
-                type="button"
-                className="et-btn-secondary min-w-[5.5rem] shrink-0 sm:w-auto !min-h-10 !px-3 !py-2 text-sm"
-                onClick={() => setSearchText("")}
-              >
-                Clear
-              </button>
+              <div className="flex flex-wrap items-stretch gap-2">
+                <input
+                  className="et-search min-w-0 flex-1 !min-h-[2.5rem] !px-3 !py-2 text-sm"
+                  placeholder="Search transactions"
+                  title="Search by category, description, date or amount"
+                  list="entry-search-suggestions"
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="et-btn-secondary min-w-[5.5rem] shrink-0 !min-h-10 !px-3 !py-2 text-sm"
+                  onClick={() => setSearchText("")}
+                >
+                  Clear
+                </button>
+              </div>
             </div>
 
             <datalist id="entry-search-suggestions">
