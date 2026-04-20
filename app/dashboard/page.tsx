@@ -4,6 +4,12 @@ import React, { useEffect, useState } from "react";
 import { RequireAuth } from "../../src/components/auth/RequireAuth";
 import { useAuth } from "../../src/components/auth/AuthProvider";
 import { createReviewRequest, listDirectoryUsers, type DirectoryUser } from "../../src/lib/repos/adminRepo";
+import {
+  getAdminStatsSummary,
+  listAdminStatsMonthly,
+  type AdminStatsMonthly,
+  type AdminStatsSummary
+} from "../../src/lib/repos/adminStatsRepo";
 import { PageLoadingShimmer } from "../../src/components/ui/PageLoadingShimmer";
 
 export default function DashboardPage() {
@@ -18,8 +24,11 @@ function Dashboard() {
   const { user, userDoc, loading } = useAuth();
   const uid = user?.uid;
   const isAdmin = userDoc?.role === "admin";
+  const currency = userDoc?.preferredCurrency || "USD";
 
   const [rows, setRows] = useState<DirectoryUser[]>([]);
+  const [summary, setSummary] = useState<AdminStatsSummary | null>(null);
+  const [monthly, setMonthly] = useState<AdminStatsMonthly[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -29,7 +38,14 @@ function Dashboard() {
     setBusy(true);
     setError(null);
     try {
-      setRows(await listDirectoryUsers());
+      const [users, statsSummary, statsMonthly] = await Promise.all([
+        listDirectoryUsers(),
+        getAdminStatsSummary(),
+        listAdminStatsMonthly(6)
+      ]);
+      setRows(users);
+      setSummary(statsSummary);
+      setMonthly(statsMonthly);
     } catch (e: any) {
       setError(e?.message || String(e));
     } finally {
@@ -75,6 +91,50 @@ function Dashboard() {
       <section className="et-card shrink-0">
         <h2 className="text-xl font-semibold">Admin dashboard</h2>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">View users and create review requests.</p>
+      </section>
+
+      <section className="et-card shrink-0">
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Analytics</h3>
+        {!summary ? (
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+            No aggregate stats yet. Populate Firestore docs under <code>adminStats/summary</code> and{" "}
+            <code>adminStats/monthly/rows</code> to enable these cards.
+          </p>
+        ) : (
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <MetricCard label="Users" value={String(summary.totalUsers)} />
+            <MetricCard label="Transactions" value={String(summary.totalTransactions)} />
+            <MetricCard label="Expense total" value={formatMoney(summary.totalExpenseAmount, currency)} />
+            <MetricCard label="Income total" value={formatMoney(summary.totalIncomeAmount, currency)} />
+          </div>
+        )}
+
+        {monthly.length ? (
+          <div className="mt-3 overflow-auto rounded-lg border border-slate-200 dark:border-white/10">
+            <table className="w-full min-w-[32rem] text-xs sm:text-sm">
+              <thead className="bg-slate-50 text-left text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <tr>
+                  <th className="px-3 py-2 font-semibold">Month</th>
+                  <th className="px-3 py-2 font-semibold">New users</th>
+                  <th className="px-3 py-2 font-semibold">Transactions</th>
+                  <th className="px-3 py-2 font-semibold">Expenses</th>
+                  <th className="px-3 py-2 font-semibold">Income</th>
+                </tr>
+              </thead>
+              <tbody>
+                {monthly.map((row) => (
+                  <tr key={row.id} className="border-t border-slate-200 dark:border-white/10">
+                    <td className="px-3 py-2">{row.monthKey}</td>
+                    <td className="px-3 py-2">{row.newUsers}</td>
+                    <td className="px-3 py-2">{row.transactions}</td>
+                    <td className="px-3 py-2">{formatMoney(row.expenseAmount, currency)}</td>
+                    <td className="px-3 py-2">{formatMoney(row.incomeAmount, currency)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
       </section>
 
       <section className="et-card flex h-0 min-h-0 flex-1 flex-col overflow-hidden">
@@ -128,6 +188,19 @@ function Dashboard() {
           )}
         </div>
       </section>
+    </div>
+  );
+}
+
+function formatMoney(value: number, currency: string) {
+  return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(Number(value || 0));
+}
+
+function MetricCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-white/10 dark:bg-white/5">
+      <div className="text-[0.7rem] uppercase tracking-wide text-slate-500 dark:text-slate-300">{label}</div>
+      <div className="mt-0.5 text-sm font-semibold text-slate-800 dark:text-slate-100 sm:text-base">{value}</div>
     </div>
   );
 }
