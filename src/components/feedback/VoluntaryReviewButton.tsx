@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { useAuth } from "../auth/AuthProvider";
@@ -17,6 +17,17 @@ export function VoluntaryReviewButton() {
   const [comment, setComment] = useState("");
   const [busy, setBusy] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [floatingPos, setFloatingPos] = useState<{ x: number; y: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const dragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    originX: number;
+    originY: number;
+    dragged: boolean;
+  } | null>(null);
+  const suppressClickRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
@@ -40,12 +51,76 @@ export function VoluntaryReviewButton() {
     }
   }
 
+  function clampToViewport(x: number, y: number, width: number, height: number) {
+    const maxX = Math.max(0, window.innerWidth - width);
+    const maxY = Math.max(0, window.innerHeight - height);
+    return {
+      x: Math.min(Math.max(0, x), maxX),
+      y: Math.min(Math.max(0, y), maxY)
+    };
+  }
+
   return (
     <>
       <button
+        ref={buttonRef}
         type="button"
-        className="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-3 z-[80] whitespace-nowrap rounded-full border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-medium leading-none text-indigo-700 shadow-lg hover:bg-indigo-100 dark:border-indigo-400/30 dark:bg-indigo-500/15 dark:text-indigo-200 dark:hover:bg-indigo-500/25 sm:bottom-[max(1rem,env(safe-area-inset-bottom))] sm:right-4 sm:px-3.5 sm:py-2.5 sm:text-sm"
-        onClick={() => setOpen(true)}
+        className={`fixed z-[80] cursor-grab select-none whitespace-nowrap rounded-full border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-medium leading-none text-indigo-700 shadow-lg hover:bg-indigo-100 active:cursor-grabbing dark:border-indigo-400/30 dark:bg-indigo-500/15 dark:text-indigo-200 dark:hover:bg-indigo-500/25 sm:px-3.5 sm:py-2.5 sm:text-sm ${
+          floatingPos ? "" : "bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-3 sm:bottom-[max(1rem,env(safe-area-inset-bottom))] sm:right-4"
+        }`}
+        style={floatingPos ? { left: `${floatingPos.x}px`, top: `${floatingPos.y}px` } : undefined}
+        onPointerDown={(e) => {
+          const btn = buttonRef.current;
+          if (!btn) return;
+          btn.setPointerCapture(e.pointerId);
+          const rect = btn.getBoundingClientRect();
+          const origin = floatingPos ?? { x: rect.left, y: rect.top };
+          dragRef.current = {
+            pointerId: e.pointerId,
+            startX: e.clientX,
+            startY: e.clientY,
+            originX: origin.x,
+            originY: origin.y,
+            dragged: false
+          };
+        }}
+        onPointerMove={(e) => {
+          const btn = buttonRef.current;
+          const drag = dragRef.current;
+          if (!btn || !drag || drag.pointerId !== e.pointerId) return;
+          e.preventDefault();
+          const dx = e.clientX - drag.startX;
+          const dy = e.clientY - drag.startY;
+          const next = clampToViewport(drag.originX + dx, drag.originY + dy, btn.offsetWidth, btn.offsetHeight);
+          if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+            drag.dragged = true;
+            suppressClickRef.current = true;
+          }
+          setFloatingPos(next);
+        }}
+        onPointerUp={(e) => {
+          const btn = buttonRef.current;
+          const drag = dragRef.current;
+          if (btn && drag && drag.pointerId === e.pointerId) {
+            btn.releasePointerCapture(e.pointerId);
+          }
+          dragRef.current = null;
+        }}
+        onPointerCancel={(e) => {
+          const btn = buttonRef.current;
+          const drag = dragRef.current;
+          if (btn && drag && drag.pointerId === e.pointerId) {
+            btn.releasePointerCapture(e.pointerId);
+          }
+          dragRef.current = null;
+        }}
+        onClick={() => {
+          if (suppressClickRef.current) {
+            suppressClickRef.current = false;
+            return;
+          }
+          setOpen(true);
+        }}
       >
         Feedback
       </button>

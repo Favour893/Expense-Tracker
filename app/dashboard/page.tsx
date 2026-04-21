@@ -162,7 +162,7 @@ function Dashboard() {
                       <th className="px-3 py-2 font-semibold">Display name</th>
                       <th className="px-3 py-2 font-semibold">Role</th>
                       <th className="px-3 py-2 font-semibold">Total entries</th>
-                      <th className="px-3 py-2 font-semibold">Entries (30d)</th>
+                      <th className="px-3 py-2 font-semibold">Last 30 days</th>
                       <th className="px-3 py-2 font-semibold">Last entry</th>
                     </tr>
                   </thead>
@@ -186,22 +186,24 @@ function Dashboard() {
                   Page {Math.min(usersPage, totalUserPages)} of {totalUserPages}
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:hover:bg-white/10 sm:text-sm"
-                    disabled={usersPage <= 1}
-                    onClick={() => setUsersPage((p) => Math.max(1, p - 1))}
-                  >
-                    Previous
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:hover:bg-white/10 sm:text-sm"
-                    disabled={usersPage >= totalUserPages}
-                    onClick={() => setUsersPage((p) => Math.min(totalUserPages, p + 1))}
-                  >
-                    Next
-                  </button>
+                  {usersPage > 1 ? (
+                    <button
+                      type="button"
+                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/10 sm:text-sm"
+                      onClick={() => setUsersPage((p) => Math.max(1, p - 1))}
+                    >
+                      Previous
+                    </button>
+                  ) : null}
+                  {usersPage < totalUserPages ? (
+                    <button
+                      type="button"
+                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/10 sm:text-sm"
+                      onClick={() => setUsersPage((p) => Math.min(totalUserPages, p + 1))}
+                    >
+                      Next
+                    </button>
+                  ) : null}
                 </div>
               </div>
             </div>
