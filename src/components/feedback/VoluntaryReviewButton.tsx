@@ -82,10 +82,10 @@ export function VoluntaryReviewButton() {
       <button
         ref={buttonRef}
         type="button"
-        className={`fixed z-[80] touch-none select-none whitespace-nowrap rounded-full bg-gradient-to-r from-indigo-600 to-sky-500 px-3 py-2 text-xs font-semibold leading-none text-white shadow-xl transition hover:brightness-110 ${
+        className={`fixed z-[80] touch-none select-none whitespace-nowrap rounded-full bg-gradient-to-r from-indigo-600 to-sky-500 px-2.5 py-1.5 text-xs font-semibold leading-none text-white shadow-xl transition hover:brightness-110 ${
           isLargeScreen ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"
-        } sm:px-3.5 sm:py-2.5 sm:text-sm ${
-          floatingPos && !isLargeScreen ? "" : "bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-3 sm:bottom-[max(1rem,env(safe-area-inset-bottom))] sm:right-4"
+        } sm:px-3 sm:py-2 sm:text-sm ${
+          floatingPos && !isLargeScreen ? "" : "bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-3 sm:bottom-[max(1rem,env(safe-area-inset-bottom))] sm:right-3"
         }`}
         style={floatingPos && !isLargeScreen ? { left: `${floatingPos.x}px`, top: `${floatingPos.y}px` } : undefined}
         onPointerDown={(e) => {
@@ -151,7 +151,7 @@ export function VoluntaryReviewButton() {
       {open && mounted
         ? createPortal(
             <div
-              className="fixed inset-0 z-[2147483647] flex items-start justify-center overflow-y-auto bg-slate-950/75 p-2 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-[1px] sm:p-4 sm:pt-[max(1.5rem,env(safe-area-inset-top))]"
+              className="fixed inset-0 z-[2147483647] flex items-start justify-center overflow-y-auto bg-slate-950/75 p-2 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-[1px] sm:p-3 sm:pt-[max(1.25rem,env(safe-area-inset-top))]"
               onMouseDown={(e) => {
                 if (e.target === e.currentTarget) setOpen(false);
               }}
@@ -160,7 +160,7 @@ export function VoluntaryReviewButton() {
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="feedback-dialog-title"
-                className="mt-1 max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-slate-900 sm:mt-2 sm:max-h-[min(560px,calc(100dvh-3rem))]"
+                className="mt-1 max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-xl dark:border-white/10 dark:bg-slate-900 sm:mt-2 sm:max-h-[min(560px,calc(100dvh-3rem))]"
               >
                 <h2 id="feedback-dialog-title" className="text-lg font-semibold text-slate-900 dark:text-white">
                   Share your feedback
@@ -169,15 +169,15 @@ export function VoluntaryReviewButton() {
                   Rate the app and optionally leave a comment. You can send feedback anytime — no invitation required.
                 </p>
 
-                <form className="mt-4 grid gap-4" onSubmit={onSubmit}>
+                <form className="mt-3 grid gap-3" onSubmit={onSubmit}>
                   <div>
                     <div className="text-sm font-medium text-slate-700 dark:text-slate-200">Rating</div>
-                    <div className="mt-2 flex flex-wrap gap-2">
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
                       {[1, 2, 3, 4, 5].map((n) => (
                         <button
                           key={n}
                           type="button"
-                          className={`min-h-10 min-w-10 rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+                          className={`min-h-9 min-w-9 rounded-lg border px-2.5 py-1.5 text-sm font-semibold transition ${
                             rating === n
                               ? "border-indigo-500 bg-indigo-50 text-indigo-800 dark:border-indigo-400 dark:bg-indigo-500/20 dark:text-indigo-100"
                               : "border-slate-200 bg-white text-slate-700 hover:border-indigo-300 dark:border-white/10 dark:bg-white/5 dark:text-slate-200"
@@ -194,7 +194,7 @@ export function VoluntaryReviewButton() {
                   <label className="grid gap-2">
                     <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Comment (optional)</span>
                     <textarea
-                      className="et-input min-h-[100px] resize-y"
+                      className="et-input min-h-[88px] resize-y"
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
                       placeholder="What works well? What could be better?"

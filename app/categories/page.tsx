@@ -126,10 +126,10 @@ function Categories() {
         </div>
       ) : (
         <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
-          <div className="et-card !p-2 sm:!p-3 flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
-            <div className="flex shrink-0 flex-wrap items-stretch gap-2">
+          <div className="et-card !p-1.5 sm:!p-2 flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
+            <div className="flex shrink-0 flex-wrap items-stretch gap-1.5">
               <input
-                className="et-search min-w-0 flex-1"
+                className="et-search min-w-0 flex-[1.4] !px-2.5 !py-1.5 text-[12px]"
                 placeholder="Search categories"
                 title="Search by category name or type"
                 list="category-search-suggestions"
@@ -138,14 +138,14 @@ function Categories() {
               />
               <button
                 type="button"
-                className="et-btn-secondary min-w-[5.5rem] shrink-0 !min-h-10 !px-3 !py-2 text-sm"
+                className="et-btn-secondary w-[4.25rem] shrink-0 !min-h-9 !px-2 !py-1.5 text-[12px]"
                 onClick={() => setSearchText("")}
               >
                 Clear
               </button>
               <button
                 type="button"
-                className="et-btn-secondary inline-flex shrink-0 items-center gap-2 !min-h-10 !px-3 !py-2 text-sm"
+                className="et-btn-secondary inline-flex shrink-0 items-center gap-1.5 !min-h-9 !px-2.5 !py-1.5 text-[12px]"
                 onClick={() => {
                   setEditingCategoryId(null);
                   setName("");
@@ -153,7 +153,7 @@ function Categories() {
                   setShowAddCategoryModal(true);
                 }}
               >
-                <span className="text-lg font-bold">+</span>
+                <span className="text-base font-bold">+</span>
                 Add category
               </button>
             </div>
@@ -241,8 +241,8 @@ function Categories() {
       )}
 
       {showAddCategoryModal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-3xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-white/10 dark:bg-slate-950">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-3">
+          <div className="w-full max-w-3xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-3 shadow-2xl dark:border-white/10 dark:bg-slate-950">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
@@ -256,8 +256,8 @@ function Categories() {
               </div>
             </div>
 
-            <form className="mt-4 grid gap-3" onSubmit={(e) => onSaveCategory(e, () => setShowAddCategoryModal(false))}>
-              <div className="grid gap-3 sm:grid-cols-2">
+            <form className="mt-3 grid gap-2" onSubmit={(e) => onSaveCategory(e, () => setShowAddCategoryModal(false))}>
+              <div className="grid gap-2 sm:grid-cols-2">
                 <label className="grid gap-2">
                   <span className="text-sm text-slate-600 dark:text-slate-300">Type <span className="text-red-500">*</span></span>
                   <select className="et-input" value={type} onChange={(e) => setType(e.target.value as CategoryType)} required>
@@ -286,7 +286,7 @@ function Categories() {
                 </label>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <button type="submit" className="et-btn-primary" disabled={busy || !name.trim()}>
                   {busy ? "Saving..." : editingCategoryId ? "Save changes" : "Add category"}
                 </button>

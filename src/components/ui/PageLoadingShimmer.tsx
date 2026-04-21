@@ -12,11 +12,11 @@ export function PageLoadingShimmer({ label = "Loading", className = "" }: { labe
       aria-busy="true"
       aria-label={label}
     >
-      <div className="space-y-3 p-1">
+      <div className="space-y-2 p-0.5">
         <div className="et-skeleton-shimmer h-8 w-2/3 max-w-md" />
         <div className="et-skeleton-shimmer h-4 w-full max-w-lg" />
         <div className="et-skeleton-shimmer h-4 w-5/6 max-w-md" />
-        <div className="grid gap-2 pt-3 sm:grid-cols-3">
+        <div className="grid gap-2 pt-2 sm:grid-cols-3">
           <div className="et-skeleton-shimmer h-24 rounded-xl" />
           <div className="et-skeleton-shimmer h-24 rounded-xl" />
           <div className="et-skeleton-shimmer h-24 rounded-xl" />

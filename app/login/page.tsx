@@ -132,23 +132,23 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden px-2 py-2">
+    <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden px-1.5 py-1.5">
       <div className="et-card mx-auto flex h-0 min-h-0 w-full max-w-2xl flex-1 flex-col overflow-hidden">
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2">
           <CashLogo size={42} className="shrink-0 translate-y-px" />
           <h1 className="bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-500 bg-clip-text text-3xl font-extrabold text-transparent">Expense Tracker</h1>
         </div>
-        <p className="mt-2 shrink-0 text-sm text-slate-600 dark:text-slate-300">Track income, every expense, and generate monthly reports.</p>
-        <div className="mt-4 inline-flex shrink-0 rounded-xl border border-indigo-100 bg-indigo-50/70 p-1 dark:border-white/10 dark:bg-white/5">
+        <p className="mt-1.5 shrink-0 text-sm text-slate-600 dark:text-slate-300">Track income, every expense, and generate monthly reports.</p>
+        <div className="mt-3 inline-flex shrink-0 rounded-xl border border-indigo-100 bg-indigo-50/70 p-1 dark:border-white/10 dark:bg-white/5">
           <button
-            className={`rounded-lg px-3 py-2 text-sm ${mode === "signin" ? "bg-white text-slate-900 shadow dark:bg-slate-800 dark:text-white" : "text-slate-600 dark:text-slate-300"}`}
+            className={`rounded-lg px-2.5 py-1.5 text-sm ${mode === "signin" ? "bg-white text-slate-900 shadow dark:bg-slate-800 dark:text-white" : "text-slate-600 dark:text-slate-300"}`}
             type="button"
             onClick={() => setMode("signin")}
           >
             Sign in
           </button>
           <button
-            className={`rounded-lg px-3 py-2 text-sm ${mode === "signup" ? "bg-white text-slate-900 shadow dark:bg-slate-800 dark:text-white" : "text-slate-600 dark:text-slate-300"}`}
+            className={`rounded-lg px-2.5 py-1.5 text-sm ${mode === "signup" ? "bg-white text-slate-900 shadow dark:bg-slate-800 dark:text-white" : "text-slate-600 dark:text-slate-300"}`}
             type="button"
             onClick={() => setMode("signup")}
           >
@@ -156,10 +156,10 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <div className="mt-4 h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 [-webkit-overflow-scrolling:touch]">
-          <div className="grid gap-3">
+        <div className="mt-3 h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 [-webkit-overflow-scrolling:touch]">
+          <div className="grid gap-2">
         {mode === "signup" ? (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-2 sm:grid-cols-2">
             <label className="grid gap-2">
               <span className="text-sm text-slate-600 dark:text-slate-300">First name <span className="text-red-500">*</span></span>
               <input className="et-input" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
@@ -236,9 +236,9 @@ export default function LoginPage() {
           </>
         ) : null}
 
-        {error ? <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</div> : null}
+        {error ? <div className="rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">{error}</div> : null}
 
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <button
             className="et-btn-primary w-full"
             disabled={busy || !email || !password}
@@ -248,7 +248,7 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <div className="mt-2 grid gap-3">
+        <div className="mt-2 grid gap-2">
           <button
             className="et-btn-secondary flex items-center justify-center gap-2 w-full"
             disabled={busy}
@@ -269,7 +269,7 @@ export default function LoginPage() {
             </svg>
             Continue with Apple
           </button>
-          <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">
+          <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
             By continuing, you agree to use your own data only. (MVP: no sharing/collaboration.)
           </p>
         </div>

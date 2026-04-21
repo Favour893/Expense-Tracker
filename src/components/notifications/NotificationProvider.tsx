@@ -55,14 +55,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   return (
     <NotificationsContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed right-4 top-4 z-[10000] flex w-full max-w-sm flex-col gap-2">
+      <div className="pointer-events-none fixed right-3 top-3 z-[10000] flex w-full max-w-sm flex-col gap-1.5">
         {items.map((item) => (
           <div
             key={item.id}
             role={item.type === "error" ? "alert" : "status"}
-            className={`pointer-events-auto rounded-xl border px-3 py-2 text-sm shadow-lg ${styleByType(item.type)}`}
+            className={`pointer-events-auto rounded-xl border px-2.5 py-1.5 text-sm shadow-lg ${styleByType(item.type)}`}
           >
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start justify-between gap-2">
               <div className="leading-5">{item.message}</div>
               <button
                 type="button"

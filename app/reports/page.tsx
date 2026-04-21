@@ -273,7 +273,7 @@ function Reports() {
                 <label className="flex min-w-0 flex-1 flex-row flex-wrap items-center gap-1.5 sm:flex-initial">
                   <span className="shrink-0 font-medium">From</span>
                   <input
-                    className="et-input min-h-10 min-w-0 flex-1 !px-3 !py-2 text-sm sm:min-w-[9.5rem]"
+                    className="et-input min-h-9 min-w-0 flex-1 !px-2.5 !py-1.5 text-sm sm:min-w-[9.5rem]"
                     type="date"
                     aria-label="Report date range start"
                     value={rangeStart}
@@ -288,7 +288,7 @@ function Reports() {
                 <label className="flex min-w-0 flex-1 flex-row flex-wrap items-center gap-1.5 sm:flex-initial">
                   <span className="shrink-0 font-medium">To</span>
                   <input
-                    className="et-input min-h-10 min-w-0 flex-1 !px-3 !py-2 text-sm sm:min-w-[9.5rem]"
+                    className="et-input min-h-9 min-w-0 flex-1 !px-2.5 !py-1.5 text-sm sm:min-w-[9.5rem]"
                     type="date"
                     aria-label="Report date range end"
                     value={rangeEnd}
@@ -302,20 +302,11 @@ function Reports() {
                 </label>
               </div>
             </div>
-            {periodLabel ? (
-              <p className="truncate text-[11px] text-slate-500 dark:text-slate-400 sm:text-xs" title={periodLabel}>
-                Period: <span className="font-medium text-slate-600 dark:text-slate-300">{periodLabel}</span>
-              </p>
-            ) : rangeStart || rangeEnd ? (
-              <p className="text-[11px] text-amber-700 dark:text-amber-200/90 sm:text-xs">
-                Choose a valid range (From on or before To, both dates set).
-              </p>
-            ) : null}
           </div>
           <div className="flex shrink-0 flex-row flex-wrap items-center justify-end gap-1.5">
             <button
               type="button"
-              className="et-btn-secondary !min-h-10 whitespace-nowrap px-3 py-2 text-xs font-semibold sm:text-sm"
+              className="et-btn-secondary !min-h-9 whitespace-nowrap px-2.5 py-1.5 text-xs font-semibold sm:text-sm"
               disabled={!exportActionsEnabled}
               onClick={() => setNarrativeOpen(true)}
             >
@@ -325,14 +316,14 @@ function Reports() {
               exportFilenameBase={`${rangeStart}_${rangeEnd}`}
               currency={currency}
               disabled={!exportActionsEnabled}
-              buttonClassName="rounded-lg !min-h-10 px-3 py-1 text-xs font-semibold sm:rounded-xl sm:px-3 sm:py-1.5 sm:text-sm"
+              buttonClassName="rounded-lg !min-h-9 px-2.5 py-1 text-xs font-semibold sm:rounded-xl sm:px-2.5 sm:py-1.5 sm:text-sm"
             />
           </div>
         </div>
       </div>
 
       {error ? (
-        <div className="shrink-0 rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200 sm:rounded-xl sm:px-4 sm:py-3 sm:text-sm">
+        <div className="shrink-0 rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs text-red-200 sm:rounded-xl sm:px-3 sm:py-2 sm:text-sm">
           {error}
         </div>
       ) : null}
@@ -361,32 +352,32 @@ function Reports() {
             {report ? (
               <div className="report-pdf-expense-only" aria-hidden="true">
             {pdfExpenseRows.length > 0 ? (
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-md shadow-indigo-100/40 dark:border-white/10 dark:bg-white/5 dark:shadow-none">
+              <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-md shadow-indigo-100/40 dark:border-white/10 dark:bg-white/5 dark:shadow-none">
                 <h3 className="text-lg font-semibold text-indigo-700 dark:text-indigo-300">Expense breakdown</h3>
                 <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
                   All expense entries for {formatReportDateRangeLabel(rangeStart, rangeEnd, "en-GB")}.
                 </p>
-                <div className="mt-4 overflow-visible rounded-xl border border-slate-200 dark:border-white/10">
+                <div className="mt-3 overflow-visible rounded-xl border border-slate-200 dark:border-white/10">
                   <table className="report-table min-w-full text-center text-sm text-slate-800 dark:text-slate-100">
                     <thead className="bg-slate-50 text-slate-700 dark:bg-white/5 dark:text-slate-200">
                       <tr>
-                        <th className="px-3 py-2 font-semibold">No.</th>
-                        <th className="px-3 py-2 font-semibold">Date</th>
-                        <th className="px-3 py-2 font-semibold">Category</th>
-                        <th className="px-3 py-2 font-semibold">Amount</th>
-                        <th className="px-3 py-2 font-semibold">%</th>
-                        <th className="px-3 py-2 font-semibold">Description</th>
+                        <th className="px-2 py-1.5 font-semibold">No.</th>
+                        <th className="px-2 py-1.5 font-semibold">Date</th>
+                        <th className="px-2 py-1.5 font-semibold">Category</th>
+                        <th className="px-2 py-1.5 font-semibold">Amount</th>
+                        <th className="px-2 py-1.5 font-semibold">%</th>
+                        <th className="px-2 py-1.5 font-semibold">Description</th>
                       </tr>
                     </thead>
                     <tbody>
                       {pdfExpenseRows.map((row, idx) => (
                         <tr key={row.id} className="border-t border-slate-200/80 dark:border-white/10">
-                          <td className="px-3 py-2 tabular-nums">{idx + 1}</td>
-                          <td className="px-3 py-2">{row.date}</td>
-                          <td className="px-3 py-2">{row.category}</td>
-                          <td className="px-3 py-2 font-medium">{formatMoney(row.amount, currency)}</td>
-                          <td className="px-3 py-2 tabular-nums">{row.pctOfTotal.toFixed(2)}%</td>
-                          <td className="px-3 py-2">{row.description || "-"}</td>
+                          <td className="px-2 py-1.5 tabular-nums">{idx + 1}</td>
+                          <td className="px-2 py-1.5">{row.date}</td>
+                          <td className="px-2 py-1.5">{row.category}</td>
+                          <td className="px-2 py-1.5 font-medium">{formatMoney(row.amount, currency)}</td>
+                          <td className="px-2 py-1.5 tabular-nums">{row.pctOfTotal.toFixed(2)}%</td>
+                          <td className="px-2 py-1.5">{row.description || "-"}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -394,7 +385,7 @@ function Reports() {
                 </div>
               </section>
             ) : (
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
+              <div className="rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
                 No expense transactions for this period.
               </div>
             )}
@@ -405,11 +396,11 @@ function Reports() {
           <section
             role="region"
             aria-label="Expense breakdown"
-            className="et-card !p-2 sm:!p-3 flex h-0 min-h-0 min-w-0 flex-1 flex-col gap-1 overflow-hidden sm:gap-1.5"
+            className="et-card !p-1.5 sm:!p-2 flex h-0 min-h-0 min-w-0 flex-1 flex-col gap-1 overflow-hidden sm:gap-1.5"
           >
             <div className="shrink-0">
               <input
-                className="et-search w-full !min-h-10 !px-3 !py-2 text-sm"
+                className="et-search w-full !min-h-9 !px-2.5 !py-1.5 text-sm"
                 placeholder="Search expenses"
                 title="Search by date, category, amount or description"
                 value={searchText}
@@ -419,7 +410,7 @@ function Reports() {
 
             <div className="mt-1 min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] touch-pan-y">
               {!tableRows.length ? (
-                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300/80 bg-slate-50/70 px-4 py-10 text-center dark:border-white/20 dark:bg-white/5">
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300/80 bg-slate-50/70 px-3 py-6 text-center dark:border-white/20 dark:bg-white/5">
                   <div className="mb-2 text-3xl" aria-hidden="true">
                     empty
                   </div>
@@ -488,7 +479,7 @@ function Reports() {
                   {page > 1 ? (
                     <button
                       type="button"
-                      className="et-btn-secondary min-h-10 flex-1 px-2 py-2 text-xs sm:min-h-12 sm:flex-initial sm:px-3 sm:text-base"
+                      className="et-btn-secondary min-h-9 flex-1 px-2 py-1.5 text-xs sm:min-h-9 sm:flex-initial sm:px-2.5 sm:text-sm"
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                     >
                       Previous
@@ -497,7 +488,7 @@ function Reports() {
                   {page < totalPages ? (
                     <button
                       type="button"
-                      className="et-btn-secondary min-h-10 flex-1 px-2 py-2 text-xs sm:min-h-12 sm:flex-initial sm:px-3 sm:text-base"
+                      className="et-btn-secondary min-h-9 flex-1 px-2 py-1.5 text-xs sm:min-h-9 sm:flex-initial sm:px-2.5 sm:text-sm"
                       onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     >
                       Next
@@ -511,7 +502,7 @@ function Reports() {
       )}
       {narrativeOpen ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-3"
           role="presentation"
           onClick={() => setNarrativeOpen(false)}
         >
@@ -522,7 +513,7 @@ function Reports() {
             className="et-card max-h-[min(85dvh,640px)] w-full max-w-lg overflow-hidden !p-0 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-4 py-3 dark:border-white/10">
+            <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-3 py-2 dark:border-white/10">
               <div className="min-w-0 pr-2">
                 <h2 id="narrative-dialog-title" className="text-base font-bold text-indigo-700 dark:text-indigo-300">
                   Narrative
@@ -541,7 +532,7 @@ function Reports() {
                 Close
               </button>
             </div>
-            <div className="max-h-[min(70dvh,520px)] overflow-y-auto overscroll-contain px-4 py-3 [-webkit-overflow-scrolling:touch]">
+            <div className="max-h-[min(70dvh,520px)] overflow-y-auto overscroll-contain px-3 py-2 [-webkit-overflow-scrolling:touch]">
               <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-200">
                 {narrativeText || "—"}
               </p>

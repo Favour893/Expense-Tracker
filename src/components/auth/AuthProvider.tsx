@@ -11,6 +11,7 @@ import { auth, db } from "../../lib/firebaseClient";
 import { getProfile, getUserDocument, saveUserDocument, type UserProfile, type UserDocument } from "../../lib/repos/profileRepo";
 import { CashLogo } from "../branding/CashLogo";
 import { VoluntaryReviewButton } from "../feedback/VoluntaryReviewButton";
+import { ReviewInviteNotificationListener } from "../notifications/ReviewInviteNotificationListener";
 
 type AuthContextValue = {
   user: User | null;
@@ -283,7 +284,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       <div className="flex h-[100dvh] min-h-0 w-full flex-col overflow-hidden overflow-x-hidden text-slate-800 dark:text-slate-100">
         {showNav ? (
           <header className="relative z-40 shrink-0 border-b border-indigo-100 bg-white/70 backdrop-blur dark:border-white/10 dark:bg-slate-900/60">
-            <div className="mx-auto grid w-full max-w-6xl grid-cols-[1fr_auto] grid-rows-[auto_auto] gap-x-2 gap-y-1 px-2 py-1.5 md:grid-cols-[auto_1fr_auto] md:grid-rows-1 md:items-center md:gap-3 md:px-3 md:py-2">
+            <div className="mx-auto grid w-full max-w-6xl grid-cols-[1fr_auto] grid-rows-[auto_auto] gap-x-1.5 gap-y-0.5 px-1.5 py-1 md:grid-cols-[auto_1fr_auto] md:grid-rows-1 md:items-center md:gap-2 md:px-2 md:py-1.5">
               <div className="col-start-1 row-start-1 flex min-w-0 items-center gap-2">
                 <CashLogo size={32} className="shrink-0 translate-y-px" />
                 <div className="truncate bg-gradient-to-r from-indigo-600 to-sky-500 bg-clip-text text-base font-bold text-transparent md:text-lg">
@@ -374,7 +375,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               </div>
 
               <nav className="col-span-2 row-start-2 flex justify-center pb-0.5 md:col-span-1 md:col-start-2 md:row-start-1 md:pb-0">
-                <div className="flex w-full items-center justify-between gap-1 px-1 md:w-auto md:justify-center md:gap-5">
+                <div className="flex w-full items-center justify-between gap-1 px-1 md:w-auto md:justify-center md:gap-3">
                   <NavLink href="/categories" label="Categories" active={pathname === "/categories"} />
                   <NavLink href="/entries" label="Entries" active={pathname === "/entries"} />
                   <NavLink href="/reports" label="Reports" active={pathname === "/reports"} />
@@ -384,10 +385,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             </div>
           </header>
         ) : null}
-        <main className="mx-auto flex h-0 min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden overflow-x-hidden px-2 py-1 md:px-3 md:py-2">
+        <main className="mx-auto flex h-0 min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden overflow-x-hidden px-1.5 py-1 md:px-2 md:py-1.5">
           {children}
         </main>
         {showNav ? <VoluntaryReviewButton /> : null}
+        {user ? <ReviewInviteNotificationListener /> : null}
       </div>
     </AuthContext.Provider>
   );

@@ -379,12 +379,12 @@ function Entries() {
         </div>
       ) : (
         <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
-          <div className="et-card !p-2 sm:!p-3 flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
+          <div className="et-card !p-1.5 sm:!p-2 flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
             <div className="flex shrink-0 flex-col gap-1">
               <div className="flex w-full items-center justify-between gap-2 whitespace-nowrap">
                   <button
                     type="button"
-                    className="et-btn-secondary inline-flex w-[4.25rem] shrink-0 items-center justify-center gap-1 !min-h-9 !px-2 !py-1.5 text-xs sm:w-auto sm:gap-2 sm:!min-h-10 sm:!px-3 sm:!py-2 sm:text-sm"
+                    className="et-btn-secondary inline-flex w-[4.25rem] shrink-0 items-center justify-center gap-1 !min-h-9 !px-2 !py-1.5 text-xs sm:w-auto sm:gap-2 sm:!min-h-9 sm:!px-2.5 sm:!py-1.5 sm:text-sm"
                     onClick={openAddTransactionModal}
                   >
                     <span className="text-base font-bold sm:text-lg">+</span>
@@ -393,7 +393,7 @@ function Entries() {
                   <label className="flex min-w-0 flex-1 items-center gap-1 text-xs text-slate-600 dark:text-slate-300 sm:flex-initial sm:gap-2 sm:text-sm">
                     <span className="hidden shrink-0 font-medium sm:inline">Month</span>
                     <input
-                      className="et-input w-full min-w-0 !min-h-9 !px-2 !py-1.5 text-xs sm:w-[9.25rem] sm:!min-h-[2.5rem] sm:!px-3 sm:!py-2 sm:text-sm"
+                      className="et-input w-full min-w-0 !min-h-9 !px-2 !py-1.5 text-xs sm:w-[9.25rem] sm:!min-h-9 sm:!px-2.5 sm:!py-1.5 sm:text-sm"
                       type="month"
                       value={monthKey}
                       onChange={(e) => setMonthKey(e.target.value)}
@@ -403,7 +403,7 @@ function Entries() {
                   <label className="flex shrink-0 items-center gap-1 text-xs text-slate-600 dark:text-slate-300 sm:gap-2 sm:text-sm">
                     <span className="hidden shrink-0 font-medium sm:inline">Currency</span>
                     <select
-                      className="et-input w-[5.75rem] shrink-0 !min-h-9 !px-2 !py-1.5 text-xs sm:w-[8.5rem] sm:!min-h-[2.5rem] sm:!px-3 sm:!py-2 sm:text-sm"
+                      className="et-input w-[5.75rem] shrink-0 !min-h-9 !px-2 !py-1.5 text-xs sm:w-[8.5rem] sm:!min-h-9 sm:!px-2.5 sm:!py-1.5 sm:text-sm"
                       value={currency}
                       disabled={currencyBusy}
                       onChange={(e) => onCurrencyChange(e.target.value)}
@@ -423,7 +423,7 @@ function Entries() {
 
               <div className="flex flex-wrap items-stretch gap-2">
                 <input
-                  className="et-search min-w-0 flex-1 !min-h-[2.5rem] !px-3 !py-2 text-sm"
+                  className="et-search min-w-0 flex-1 !min-h-9 !px-2.5 !py-1.5 text-sm"
                   placeholder="Search transactions"
                   title="Search by category, description, date or amount"
                   list="entry-search-suggestions"
@@ -432,7 +432,7 @@ function Entries() {
                 />
                 <button
                   type="button"
-                  className="et-btn-secondary w-[4.5rem] shrink-0 !min-h-10 !px-2 !py-2 text-sm"
+                  className="et-btn-secondary w-[4.5rem] shrink-0 !min-h-9 !px-2 !py-1.5 text-sm"
                   onClick={() => setSearchText("")}
                 >
                   Clear
@@ -522,8 +522,8 @@ function Entries() {
       )}
 
       {showAddTransactionModal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="max-h-[min(92dvh,720px)] w-full max-w-4xl overflow-visible rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-white/10 dark:bg-slate-950">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-3">
+          <div className="max-h-[min(92dvh,720px)] w-full max-w-4xl overflow-visible rounded-3xl border border-slate-200 bg-white p-3 shadow-2xl dark:border-white/10 dark:bg-slate-950">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
@@ -537,8 +537,8 @@ function Entries() {
               </div>
             </div>
 
-            <form className="mt-4 grid gap-3" onSubmit={(e) => onSaveTransaction(e, () => setShowAddTransactionModal(false))}>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <form className="mt-3 grid gap-2" onSubmit={(e) => onSaveTransaction(e, () => setShowAddTransactionModal(false))}>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 <label className="grid gap-2">
                   <span className="text-sm text-slate-600 dark:text-slate-300">Category type <span className="text-red-500">*</span></span>
                   <select
@@ -642,13 +642,13 @@ function Entries() {
                       <ul
                         id="entry-category-listbox"
                         role="listbox"
-                        className="absolute left-0 right-0 top-full z-[60] mt-1 max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-white/10 dark:bg-slate-900"
+                        className="absolute left-0 right-0 top-full z-[60] mt-1 max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-white py-0.5 shadow-lg dark:border-white/10 dark:bg-slate-900"
                       >
                         {categoryPickerFiltered.map((c) => (
                           <li key={c.id} role="option" aria-selected={c.id === categoryId}>
                             <button
                               type="button"
-                              className="w-full px-3 py-2 text-left text-sm hover:bg-indigo-50 dark:hover:bg-white/10"
+                              className="w-full px-2.5 py-1.5 text-left text-sm hover:bg-indigo-50 dark:hover:bg-white/10"
                               onMouseDown={(e) => e.preventDefault()}
                               onClick={() => {
                                 setCategoryId(c.id);
@@ -664,7 +664,7 @@ function Entries() {
                           <li role="option">
                             <button
                               type="button"
-                              className="w-full px-3 py-2 text-left text-sm font-medium text-indigo-700 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-white/10"
+                              className="w-full px-2.5 py-1.5 text-left text-sm font-medium text-indigo-700 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-white/10"
                               disabled={categoryAddBusy}
                               onMouseDown={(e) => e.preventDefault()}
                               onClick={() => void onQuickAddCategory()}
@@ -674,7 +674,7 @@ function Entries() {
                           </li>
                         ) : null}
                         {!categoryPickerFiltered.length && !showCategoryAddInDropdown ? (
-                          <li className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
+                          <li className="px-2.5 py-1.5 text-sm text-slate-500 dark:text-slate-400">
                             {typedCategories.length
                               ? "No matches. Type a new name, then Add or press Enter."
                               : "Type a category name, then Add or press Enter."}
@@ -706,7 +706,7 @@ function Entries() {
 
               {error ? <div className="text-sm text-red-200">{error}</div> : null}
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <button className="et-btn-primary" type="submit" disabled={busy || !selectedCategory}>
                   {busy ? "Saving..." : editingTransactionId ? "Save changes" : "Add entry"}
                 </button>

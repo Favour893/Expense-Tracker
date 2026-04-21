@@ -3,7 +3,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { RequireAuth } from "../../src/components/auth/RequireAuth";
 import { useAuth } from "../../src/components/auth/AuthProvider";
-import { listDirectoryUsersWithUsage, type DirectoryUserUsage } from "../../src/lib/repos/adminRepo";
+import { useNotifications } from "../../src/components/notifications/NotificationProvider";
+import {
+  listDirectoryUsersWithUsage,
+  listVoluntaryReviews,
+  requestUserFeedback,
+  type DirectoryUserUsage,
+  type VoluntaryReviewDoc
+} from "../../src/lib/repos/adminRepo";
 import {
   getAdminStatsSummary,
   listAdminStatsMonthly,
@@ -21,17 +28,26 @@ export default function DashboardPage() {
 }
 
 function Dashboard() {
-  const { userDoc, loading } = useAuth();
+  const { user, userDoc, loading } = useAuth();
+  const { notifySuccess, notifyError } = useNotifications();
   const isAdmin = userDoc?.role === "admin";
   const currency = userDoc?.preferredCurrency || "USD";
 
   const [summary, setSummary] = useState<AdminStatsSummary | null>(null);
   const [monthly, setMonthly] = useState<AdminStatsMonthly[]>([]);
   const [users, setUsers] = useState<DirectoryUserUsage[]>([]);
+  const [reviews, setReviews] = useState<VoluntaryReviewDoc[]>([]);
   const [usersPage, setUsersPage] = useState(1);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [requestingReviewForId, setRequestingReviewForId] = useState<string | null>(null);
   const usersPageSize = 20;
+
+  const userById = useMemo(() => {
+    const m = new Map<string, DirectoryUserUsage>();
+    for (const u of users) m.set(u.id, u);
+    return m;
+  }, [users]);
 
   const totalUserPages = Math.max(1, Math.ceil(users.length / usersPageSize));
   const pagedUsers = useMemo(() => {
@@ -45,14 +61,16 @@ function Dashboard() {
     setBusy(true);
     setError(null);
     try {
-      const [statsSummary, statsMonthly, usageRows] = await Promise.all([
+      const [statsSummary, statsMonthly, usageRows, reviewRows] = await Promise.all([
         getAdminStatsSummary(),
         listAdminStatsMonthly(6),
-        listDirectoryUsersWithUsage()
+        listDirectoryUsersWithUsage(),
+        listVoluntaryReviews()
       ]);
       setSummary(statsSummary);
       setMonthly(statsMonthly);
       setUsers(usageRows);
+      setReviews(reviewRows);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -73,6 +91,22 @@ function Dashboard() {
     if (usersPage > totalUserPages) setUsersPage(totalUserPages);
   }, [usersPage, totalUserPages]);
 
+  async function onRequestReview(target: DirectoryUserUsage) {
+    if (!user?.uid) {
+      notifyError("You must be signed in to send a request.");
+      return;
+    }
+    setRequestingReviewForId(target.id);
+    try {
+      await requestUserFeedback(user.uid, target);
+      notifySuccess(`Feedback request sent to ${target.email || target.id}. They will see it in the app as a notification.`);
+    } catch (e: unknown) {
+      notifyError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setRequestingReviewForId(null);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
@@ -83,7 +117,7 @@ function Dashboard() {
 
   if (!isAdmin) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
+      <div className="rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
         Admin access required. Ask an existing admin to set your user document role to <code>admin</code>.
       </div>
     );
@@ -120,21 +154,21 @@ function Dashboard() {
               <table className="w-full min-w-[28rem] text-xs sm:text-sm">
                 <thead className="bg-slate-50 text-left text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                   <tr>
-                    <th className="px-3 py-2 font-semibold">Month</th>
-                    <th className="px-3 py-2 font-semibold">New sign-ups</th>
-                    <th className="px-3 py-2 font-semibold">Entries</th>
-                    <th className="px-3 py-2 font-semibold">Expense volume</th>
-                    <th className="px-3 py-2 font-semibold">Income volume</th>
+                    <th className="px-2 py-1.5 font-semibold">Month</th>
+                    <th className="px-2 py-1.5 font-semibold">New sign-ups</th>
+                    <th className="px-2 py-1.5 font-semibold">Entries</th>
+                    <th className="px-2 py-1.5 font-semibold">Expense volume</th>
+                    <th className="px-2 py-1.5 font-semibold">Income volume</th>
                   </tr>
                 </thead>
                 <tbody>
                   {monthly.map((row) => (
                     <tr key={row.id} className="border-t border-slate-200 dark:border-white/10">
-                      <td className="px-3 py-2">{row.monthKey}</td>
-                      <td className="px-3 py-2">{row.newUsers}</td>
-                      <td className="px-3 py-2">{row.transactions}</td>
-                      <td className="px-3 py-2">{formatMoney(row.expenseAmount, currency)}</td>
-                      <td className="px-3 py-2">{formatMoney(row.incomeAmount, currency)}</td>
+                      <td className="px-2 py-1.5">{row.monthKey}</td>
+                      <td className="px-2 py-1.5">{row.newUsers}</td>
+                      <td className="px-2 py-1.5">{row.transactions}</td>
+                      <td className="px-2 py-1.5">{formatMoney(row.expenseAmount, currency)}</td>
+                      <td className="px-2 py-1.5">{formatMoney(row.incomeAmount, currency)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -144,37 +178,100 @@ function Dashboard() {
         </div>
       </section>
 
+      <section className="et-card flex max-h-[min(42dvh,28rem)] shrink-0 flex-col overflow-hidden">
+        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">User feedback</h3>
+        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+          Voluntary ratings and comments from the Feedback button. One saved review per account (updates replace the previous).
+        </p>
+        <div className="mt-2 min-h-0 flex-1 overflow-auto rounded-lg border border-slate-200 dark:border-white/10">
+          {!reviews.length ? (
+            <div className="p-3 text-sm text-slate-600 dark:text-slate-300">{busy ? "Loading feedback..." : "No feedback submitted yet."}</div>
+          ) : (
+            <table className="w-full min-w-[36rem] text-xs sm:text-sm">
+              <thead className="sticky top-0 bg-slate-50 text-left text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                <tr>
+                  <th className="px-2 py-1.5 font-semibold">Email</th>
+                  <th className="px-2 py-1.5 font-semibold">Display name</th>
+                  <th className="px-2 py-1.5 font-semibold">Rating</th>
+                  <th className="px-2 py-1.5 font-semibold">Comment</th>
+                  <th className="px-2 py-1.5 font-semibold">Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reviews.map((r) => {
+                  const u = userById.get(r.userId);
+                  const email = u?.email || "—";
+                  const displayName = u?.displayName || "—";
+                  const commentPreview =
+                    r.comment.length > 160 ? `${r.comment.slice(0, 157)}…` : r.comment || "—";
+                  return (
+                    <tr key={r.userId} className="border-t border-slate-200 dark:border-white/10">
+                      <td className="max-w-[12rem] truncate px-2 py-1.5" title={email !== "—" ? email : undefined}>
+                        {email}
+                      </td>
+                      <td className="max-w-[10rem] truncate px-2 py-1.5" title={displayName !== "—" ? displayName : undefined}>
+                        {displayName}
+                      </td>
+                      <td className="whitespace-nowrap px-2 py-1.5 tabular-nums">{r.rating} / 5</td>
+                      <td className="max-w-[min(28rem,40vw)] px-2 py-1.5 text-slate-700 dark:text-slate-200" title={r.comment || undefined}>
+                        <span className="line-clamp-2 whitespace-pre-wrap break-words">{commentPreview}</span>
+                      </td>
+                      <td className="whitespace-nowrap px-2 py-1.5 text-slate-600 dark:text-slate-300">
+                        {r.updatedAt ? formatDateTime(r.updatedAt) : r.createdAt ? formatDateTime(r.createdAt) : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
+
       <section className="et-card flex h-0 min-h-0 flex-1 flex-col overflow-hidden">
         <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Users and activity</h3>
         <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-          Shows account identity and usage frequency only. No category names, descriptions, or transaction details are shown.
+          Shows account identity and usage frequency only. No category names, descriptions, or transaction details are shown. Use
+          &nbsp;Request review to log an outreach row and show that user an in-app notification (not email).
         </p>
         <div className="mt-2 min-h-0 flex-1 overflow-auto rounded-lg border border-slate-200 dark:border-white/10">
           {!users.length ? (
-            <div className="p-4 text-sm text-slate-600 dark:text-slate-300">{busy ? "Loading users..." : "No users found."}</div>
+            <div className="p-3 text-sm text-slate-600 dark:text-slate-300">{busy ? "Loading users..." : "No users found."}</div>
           ) : (
             <div className="flex h-full min-h-0 flex-col">
               <div className="min-h-0 flex-1 overflow-auto">
-                <table className="w-full min-w-[44rem] text-xs sm:text-sm">
+                <table className="w-full min-w-[52rem] text-xs sm:text-sm">
                   <thead className="sticky top-0 bg-slate-50 text-left text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                     <tr>
-                      <th className="px-3 py-2 font-semibold">Email</th>
-                      <th className="px-3 py-2 font-semibold">Display name</th>
-                      <th className="px-3 py-2 font-semibold">Role</th>
-                      <th className="px-3 py-2 font-semibold">Total entries</th>
-                      <th className="px-3 py-2 font-semibold">Last 30 days</th>
-                      <th className="px-3 py-2 font-semibold">Last entry</th>
+                      <th className="px-2 py-1.5 font-semibold">Email</th>
+                      <th className="px-2 py-1.5 font-semibold">Display name</th>
+                      <th className="px-2 py-1.5 font-semibold">Role</th>
+                      <th className="px-2 py-1.5 font-semibold">Total entries</th>
+                      <th className="px-2 py-1.5 font-semibold">Last 30 days</th>
+                      <th className="px-2 py-1.5 font-semibold">Last entry</th>
+                      <th className="px-2 py-1.5 font-semibold">Feedback</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pagedUsers.map((row) => (
                       <tr key={row.id} className="border-t border-slate-200 dark:border-white/10">
-                        <td className="px-3 py-2">{row.email}</td>
-                        <td className="px-3 py-2">{row.displayName || "-"}</td>
-                        <td className="px-3 py-2">{row.role || "user"}</td>
-                        <td className="px-3 py-2">{row.totalEntries}</td>
-                        <td className="px-3 py-2">{row.entriesLast30Days}</td>
-                        <td className="px-3 py-2">{row.lastEntryAt ? formatDateTime(row.lastEntryAt) : "-"}</td>
+                        <td className="px-2 py-1.5">{row.email}</td>
+                        <td className="px-2 py-1.5">{row.displayName || "-"}</td>
+                        <td className="px-2 py-1.5">{row.role || "user"}</td>
+                        <td className="px-2 py-1.5">{row.totalEntries}</td>
+                        <td className="px-2 py-1.5">{row.entriesLast30Days}</td>
+                        <td className="px-2 py-1.5">{row.lastEntryAt ? formatDateTime(row.lastEntryAt) : "-"}</td>
+                        <td className="whitespace-nowrap px-2 py-1.5">
+                          <button
+                            type="button"
+                            className="rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-1 text-[11px] font-semibold text-indigo-800 hover:bg-indigo-100 disabled:opacity-60 dark:border-indigo-400/40 dark:bg-indigo-500/15 dark:text-indigo-100 dark:hover:bg-indigo-500/25 sm:text-xs"
+                            disabled={Boolean(requestingReviewForId) || busy}
+                            aria-busy={requestingReviewForId === row.id}
+                            onClick={() => void onRequestReview(row)}
+                          >
+                            {requestingReviewForId === row.id ? "Sending…" : "Request review"}
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
