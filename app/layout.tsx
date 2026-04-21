@@ -4,10 +4,10 @@ import { AuthProvider } from "../src/components/auth/AuthProvider";
 import { NotificationProvider } from "../src/components/notifications/NotificationProvider";
 
 export const metadata: Metadata = {
-  applicationName: "Monthly Money Reports",
+  applicationName: "Expense Tracker",
   appleWebApp: {
     capable: true,
-    title: "Monthly Money Reports",
+    title: "Expense Tracker",
     statusBarStyle: "default"
   },
   icons: {

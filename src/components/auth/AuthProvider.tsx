@@ -373,13 +373,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 ) : null}
               </div>
 
-              <nav className="col-span-2 row-start-2 flex justify-center overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] md:col-span-1 md:col-start-2 md:row-start-1 md:pb-0 [&::-webkit-scrollbar]:hidden">
-                <div className="flex shrink-0 items-center gap-4 px-1 md:gap-5">
+              <nav className="col-span-2 row-start-2 flex justify-center pb-0.5 md:col-span-1 md:col-start-2 md:row-start-1 md:pb-0">
+                <div className="flex w-full items-center justify-between gap-1 px-1 md:w-auto md:justify-center md:gap-5">
                   <NavLink href="/categories" label="Categories" active={pathname === "/categories"} />
                   <NavLink href="/entries" label="Entries" active={pathname === "/entries"} />
                   <NavLink href="/reports" label="Reports" active={pathname === "/reports"} />
                   {userDoc?.role === "admin" ? <NavLink href="/dashboard" label="Dashboard" active={pathname === "/dashboard"} /> : null}
-                  <VoluntaryReviewButton />
                 </div>
               </nav>
             </div>
@@ -388,6 +387,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         <main className="mx-auto flex h-0 min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden overflow-x-hidden px-2 py-1 md:px-3 md:py-2">
           {children}
         </main>
+        {showNav ? <VoluntaryReviewButton /> : null}
       </div>
     </AuthContext.Provider>
   );
@@ -397,7 +397,7 @@ function NavLink({ href, label, active }: { href: string; label: string; active?
   return (
     <Link
       href={href}
-      className={`text-sm font-medium transition ${
+      className={`flex-1 whitespace-nowrap text-center text-xs font-medium transition md:flex-none md:text-sm ${
         active
           ? "text-indigo-600 underline decoration-indigo-400 underline-offset-4 dark:text-indigo-300"
           : "text-slate-700 hover:text-indigo-600 hover:underline dark:text-slate-200 dark:hover:text-indigo-300"

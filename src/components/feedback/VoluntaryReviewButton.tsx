@@ -44,7 +44,7 @@ export function VoluntaryReviewButton() {
     <>
       <button
         type="button"
-        className="shrink-0 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-400/30 dark:bg-indigo-500/15 dark:text-indigo-200 dark:hover:bg-indigo-500/25 md:text-sm"
+        className="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-3 z-[80] whitespace-nowrap rounded-full border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-medium leading-none text-indigo-700 shadow-lg hover:bg-indigo-100 dark:border-indigo-400/30 dark:bg-indigo-500/15 dark:text-indigo-200 dark:hover:bg-indigo-500/25 sm:bottom-[max(1rem,env(safe-area-inset-bottom))] sm:right-4 sm:px-3.5 sm:py-2.5 sm:text-sm"
         onClick={() => setOpen(true)}
       >
         Feedback

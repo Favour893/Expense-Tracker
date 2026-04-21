@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Monthly Money Reports",
-    short_name: "Money Reports",
-    description: "Track expenses and monthly money reports.",
+    name: "Expense Tracker",
+    short_name: "Expense Tracker",
+    description: "Track expenses and monthly financial activity.",
     start_url: "/",
     display: "standalone",
     background_color: "#0B1220",

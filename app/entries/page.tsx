@@ -606,7 +606,13 @@ function Entries() {
                           if (!cur || cur.name !== v) setCategoryId("");
                         }
                       }}
-                      onFocus={() => setCategoryMenuOpen(true)}
+                      onFocus={(e) => {
+                        setCategoryMenuOpen(true);
+                        if (e.currentTarget.value) e.currentTarget.select();
+                      }}
+                      onClick={(e) => {
+                        if (e.currentTarget.value) e.currentTarget.select();
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           e.preventDefault();
