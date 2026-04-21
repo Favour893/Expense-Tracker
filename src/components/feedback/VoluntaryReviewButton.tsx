@@ -18,6 +18,7 @@ export function VoluntaryReviewButton() {
   const [busy, setBusy] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [floatingPos, setFloatingPos] = useState<{ x: number; y: number } | null>(null);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const dragRef = useRef<{
     pointerId: number;
@@ -32,6 +33,22 @@ export function VoluntaryReviewButton() {
   useEffect(() => {
     setMounted(true);
     return () => setMounted(false);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(min-width: 640px)");
+    const onChange = () => {
+      const next = mq.matches;
+      setIsLargeScreen(next);
+      if (next) {
+        // Keep desktop fixed at bottom-right.
+        setFloatingPos(null);
+      }
+    };
+    onChange();
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
   }, []);
 
   async function onSubmit(e: React.FormEvent) {
@@ -65,11 +82,14 @@ export function VoluntaryReviewButton() {
       <button
         ref={buttonRef}
         type="button"
-        className={`fixed z-[80] cursor-grab select-none whitespace-nowrap rounded-full border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-medium leading-none text-indigo-700 shadow-lg hover:bg-indigo-100 active:cursor-grabbing dark:border-indigo-400/30 dark:bg-indigo-500/15 dark:text-indigo-200 dark:hover:bg-indigo-500/25 sm:px-3.5 sm:py-2.5 sm:text-sm ${
-          floatingPos ? "" : "bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-3 sm:bottom-[max(1rem,env(safe-area-inset-bottom))] sm:right-4"
+        className={`fixed z-[80] touch-none select-none whitespace-nowrap rounded-full bg-gradient-to-r from-indigo-600 to-sky-500 px-3 py-2 text-xs font-semibold leading-none text-white shadow-xl transition hover:brightness-110 ${
+          isLargeScreen ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"
+        } sm:px-3.5 sm:py-2.5 sm:text-sm ${
+          floatingPos && !isLargeScreen ? "" : "bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-3 sm:bottom-[max(1rem,env(safe-area-inset-bottom))] sm:right-4"
         }`}
-        style={floatingPos ? { left: `${floatingPos.x}px`, top: `${floatingPos.y}px` } : undefined}
+        style={floatingPos && !isLargeScreen ? { left: `${floatingPos.x}px`, top: `${floatingPos.y}px` } : undefined}
         onPointerDown={(e) => {
+          if (isLargeScreen) return;
           const btn = buttonRef.current;
           if (!btn) return;
           btn.setPointerCapture(e.pointerId);
@@ -85,6 +105,7 @@ export function VoluntaryReviewButton() {
           };
         }}
         onPointerMove={(e) => {
+          if (isLargeScreen) return;
           const btn = buttonRef.current;
           const drag = dragRef.current;
           if (!btn || !drag || drag.pointerId !== e.pointerId) return;
@@ -92,13 +113,14 @@ export function VoluntaryReviewButton() {
           const dx = e.clientX - drag.startX;
           const dy = e.clientY - drag.startY;
           const next = clampToViewport(drag.originX + dx, drag.originY + dy, btn.offsetWidth, btn.offsetHeight);
-          if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+          if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
             drag.dragged = true;
             suppressClickRef.current = true;
           }
           setFloatingPos(next);
         }}
         onPointerUp={(e) => {
+          if (isLargeScreen) return;
           const btn = buttonRef.current;
           const drag = dragRef.current;
           if (btn && drag && drag.pointerId === e.pointerId) {
@@ -107,6 +129,7 @@ export function VoluntaryReviewButton() {
           dragRef.current = null;
         }}
         onPointerCancel={(e) => {
+          if (isLargeScreen) return;
           const btn = buttonRef.current;
           const drag = dragRef.current;
           if (btn && drag && drag.pointerId === e.pointerId) {
