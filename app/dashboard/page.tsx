@@ -131,16 +131,7 @@ function Dashboard() {
       ) : null}
 
       <section className="et-card flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">User feedback</h3>
-          <button
-            type="button"
-            className="et-btn-secondary !min-h-9 shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-semibold sm:text-sm"
-            onClick={() => setAppUsageModalOpen(true)}
-          >
-            App usage
-          </button>
-        </div>
+        <h3 className="shrink-0 text-sm font-semibold text-slate-700 dark:text-slate-200">User feedback</h3>
         <div className="mt-2 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-lg border border-slate-200 [-webkit-overflow-scrolling:touch] dark:border-white/10">
           {!reviews.length ? (
             <div className="p-3 text-sm text-slate-600 dark:text-slate-300">{busy ? "Loading feedback..." : "No feedback submitted yet."}</div>
@@ -187,7 +178,16 @@ function Dashboard() {
       </section>
 
       <section className="et-card flex min-h-0 flex-1 flex-col overflow-hidden">
-        <h3 className="shrink-0 text-sm font-semibold text-slate-700 dark:text-slate-200">Users and activity</h3>
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Users and activity</h3>
+          <button
+            type="button"
+            className="et-btn-secondary !min-h-9 shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-semibold sm:text-sm"
+            onClick={() => setAppUsageModalOpen(true)}
+          >
+            App usage
+          </button>
+        </div>
         <div className="mt-2 min-h-0 flex-1 overflow-auto rounded-lg border border-slate-200 dark:border-white/10">
           {!users.length ? (
             <div className="p-3 text-sm text-slate-600 dark:text-slate-300">{busy ? "Loading users..." : "No users found."}</div>
