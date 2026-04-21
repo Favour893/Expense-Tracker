@@ -12,14 +12,17 @@ type Props = {
   incomeCount?: number;
   expenseCount?: number;
   className?: string;
+  /** Optional onboarding anchor (`data-tour`). */
+  tourAnchor?: string;
 };
 
-export function IncomeExpenseTabs({ value, onChange, panelId, incomeCount, expenseCount, className = "" }: Props) {
+export function IncomeExpenseTabs({ value, onChange, panelId, incomeCount, expenseCount, className = "", tourAnchor }: Props) {
   const incomeTabId = `${panelId}-tab-income`;
   const expenseTabId = `${panelId}-tab-expense`;
 
   return (
     <div
+      data-tour={tourAnchor}
       className={`grid grid-cols-2 gap-0.5 sm:gap-1 ${className}`}
       role="tablist"
       aria-label="Income or expenses"

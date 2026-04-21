@@ -2,13 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scrollbar-gutter: stable;
+  height: 100%;
+}
+
 html,
 body {
   overflow-x: hidden;
-  min-height: 100%;
 }
 
 body {
+  min-height: 100dvh;
+  min-height: 100svh;
+  overscroll-behavior-y: contain;
   background:
     radial-gradient(1200px 700px at -10% -10%, rgba(79, 70, 229, 0.22), transparent),
     radial-gradient(1000px 600px at 110% -20%, rgba(14, 165, 233, 0.2), transparent),

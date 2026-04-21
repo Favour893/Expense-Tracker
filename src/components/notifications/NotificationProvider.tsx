@@ -8,13 +8,15 @@ type NotificationItem = {
   id: string;
   type: NotificationType;
   message: string;
+  /** When true, toast stays until dismissed (no auto-hide). Used for feedback invite messages. */
+  persistent?: boolean;
 };
 
 type NotificationsContextValue = {
-  notify: (type: NotificationType, message: string) => void;
-  notifySuccess: (message: string) => void;
-  notifyError: (message: string) => void;
-  notifyInfo: (message: string) => void;
+  notify: (type: NotificationType, message: string, opts?: { persistent?: boolean }) => void;
+  notifySuccess: (message: string, opts?: { persistent?: boolean }) => void;
+  notifyError: (message: string, opts?: { persistent?: boolean }) => void;
+  notifyInfo: (message: string, opts?: { persistent?: boolean }) => void;
 };
 
 const NotificationsContext = createContext<NotificationsContextValue | null>(null);
@@ -36,27 +38,61 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     setItems((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
-  const notify = useCallback((type: NotificationType, message: string) => {
-    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    setItems((prev) => [...prev, { id, type, message }]);
-    window.setTimeout(() => remove(id), 4000);
-  }, [remove]);
+  const notify = useCallback(
+    (type: NotificationType, message: string, opts?: { persistent?: boolean }) => {
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      setItems((prev) => [...prev, { id, type, message, persistent: opts?.persistent }]);
+      if (!opts?.persistent) {
+        window.setTimeout(() => remove(id), 4000);
+      }
+    },
+    [remove]
+  );
 
   const value = useMemo<NotificationsContextValue>(
     () => ({
       notify,
-      notifySuccess: (message) => notify("success", message),
-      notifyError: (message) => notify("error", message),
-      notifyInfo: (message) => notify("info", message)
+      notifySuccess: (message, opts) => notify("success", message, opts),
+      notifyError: (message, opts) => notify("error", message, opts),
+      notifyInfo: (message, opts) => notify("info", message, opts)
     }),
     [notify]
   );
 
+  const persistentItems = items.filter((i) => i.persistent);
+  const ephemeralItems = items.filter((i) => !i.persistent);
+  const ephemeralTopClass = persistentItems.length > 0 ? "top-[max(5.75rem,env(safe-area-inset-top))]" : "top-3";
+
   return (
     <NotificationsContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed right-3 top-3 z-[10000] flex w-full max-w-sm flex-col gap-1.5">
-        {items.map((item) => (
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-[10001] flex justify-center px-3 pt-[max(0.5rem,env(safe-area-inset-top))]">
+        <div className="pointer-events-auto flex w-full max-w-xl flex-col gap-2">
+          {persistentItems.map((item) => (
+            <div
+              key={item.id}
+              role={item.type === "error" ? "alert" : "status"}
+              className={`rounded-xl border px-3 py-2.5 text-sm shadow-lg ${styleByType(item.type)}`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="leading-snug">{item.message}</div>
+                <button
+                  type="button"
+                  className="shrink-0 rounded-md px-2 py-1 text-xs font-semibold hover:bg-black/5 dark:hover:bg-white/10"
+                  onClick={() => remove(item.id)}
+                  aria-label="Dismiss notification"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div
+        className={`pointer-events-none fixed right-3 z-[10000] flex w-full max-w-sm flex-col gap-1.5 ${ephemeralTopClass}`}
+      >
+        {ephemeralItems.map((item) => (
           <div
             key={item.id}
             role={item.type === "error" ? "alert" : "status"}
@@ -85,4 +121,3 @@ export function useNotifications() {
   if (!ctx) throw new Error("useNotifications must be used within NotificationProvider");
   return ctx;
 }
-

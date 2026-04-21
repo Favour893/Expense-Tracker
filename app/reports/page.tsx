@@ -269,7 +269,10 @@ function Reports() {
         <div className="flex w-full flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
           <div className="flex min-w-0 flex-1 flex-col gap-1 sm:gap-1.5">
             <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
-              <div className="flex min-w-0 flex-1 flex-row flex-wrap items-center gap-2 text-[11px] text-slate-600 dark:text-slate-300 sm:flex-initial sm:gap-2 sm:text-sm">
+              <div
+                className="flex min-w-0 flex-1 flex-row flex-wrap items-center gap-2 text-[11px] text-slate-600 dark:text-slate-300 sm:flex-initial sm:gap-2 sm:text-sm"
+                data-tour="reports-range"
+              >
                 <label className="flex min-w-0 flex-1 flex-row flex-wrap items-center gap-1.5 sm:flex-initial">
                   <span className="shrink-0 font-medium">From</span>
                   <input
@@ -303,7 +306,7 @@ function Reports() {
               </div>
             </div>
           </div>
-          <div className="flex shrink-0 flex-row flex-wrap items-center justify-end gap-1.5">
+          <div className="flex shrink-0 flex-row flex-wrap items-center justify-end gap-1.5" data-tour="reports-actions">
             <button
               type="button"
               className="et-btn-secondary !min-h-9 whitespace-nowrap px-2.5 py-1.5 text-xs font-semibold sm:text-sm"
@@ -345,7 +348,10 @@ function Reports() {
               </div>
               <div className="max-w-[78%] text-right text-xs font-semibold leading-tight sm:text-sm">{displayName}</div>
             </div>
-            <div className="report-preview-scroll h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
+            <div
+              className="report-preview-scroll h-0 min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
+              data-tour="reports-preview"
+            >
               {report ? <ReportPreview report={report} currency={currency} narrativeText={narrativeText} /> : null}
             </div>
 
@@ -401,6 +407,7 @@ function Reports() {
             <div className="shrink-0">
               <input
                 className="et-search w-full !min-h-9 !px-2.5 !py-1.5 text-sm"
+                data-tour="reports-search"
                 placeholder="Search expenses"
                 title="Search by date, category, amount or description"
                 value={searchText}

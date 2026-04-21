@@ -385,12 +385,16 @@ function Entries() {
                   <button
                     type="button"
                     className="et-btn-secondary inline-flex w-[4.25rem] shrink-0 items-center justify-center gap-1 !min-h-9 !px-2 !py-1.5 text-xs sm:w-auto sm:gap-2 sm:!min-h-9 sm:!px-2.5 sm:!py-1.5 sm:text-sm"
+                    data-tour="entries-add"
                     onClick={openAddTransactionModal}
                   >
                     <span className="text-base font-bold sm:text-lg">+</span>
                     Add
                   </button>
-                  <label className="flex min-w-0 flex-1 items-center gap-1 text-xs text-slate-600 dark:text-slate-300 sm:flex-initial sm:gap-2 sm:text-sm">
+                  <label
+                    className="flex min-w-0 flex-1 items-center gap-1 text-xs text-slate-600 dark:text-slate-300 sm:flex-initial sm:gap-2 sm:text-sm"
+                    data-tour="entries-month"
+                  >
                     <span className="hidden shrink-0 font-medium sm:inline">Month</span>
                     <input
                       className="et-input w-full min-w-0 !min-h-9 !px-2 !py-1.5 text-xs sm:w-[9.25rem] sm:!min-h-9 sm:!px-2.5 sm:!py-1.5 sm:text-sm"
@@ -400,7 +404,10 @@ function Entries() {
                       aria-label="Month"
                     />
                   </label>
-                  <label className="flex shrink-0 items-center gap-1 text-xs text-slate-600 dark:text-slate-300 sm:gap-2 sm:text-sm">
+                  <label
+                    className="flex shrink-0 items-center gap-1 text-xs text-slate-600 dark:text-slate-300 sm:gap-2 sm:text-sm"
+                    data-tour="entries-currency"
+                  >
                     <span className="hidden shrink-0 font-medium sm:inline">Currency</span>
                     <select
                       className="et-input w-[5.75rem] shrink-0 !min-h-9 !px-2 !py-1.5 text-xs sm:w-[8.5rem] sm:!min-h-9 sm:!px-2.5 sm:!py-1.5 sm:text-sm"
@@ -421,7 +428,7 @@ function Entries() {
                   </span>
               </div>
 
-              <div className="flex flex-wrap items-stretch gap-2">
+              <div className="flex flex-wrap items-stretch gap-2" data-tour="entries-search-row">
                 <input
                   className="et-search min-w-0 flex-1 !min-h-9 !px-2.5 !py-1.5 text-sm"
                   placeholder="Search transactions"
@@ -454,6 +461,7 @@ function Entries() {
                 incomeCount={incomeTransactions.length}
                 expenseCount={expenseTransactions.length}
                 className="shrink-0"
+                tourAnchor="entries-tabs"
               />
               <div
                 role="tabpanel"

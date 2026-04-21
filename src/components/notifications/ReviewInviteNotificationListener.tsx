@@ -43,7 +43,7 @@ export function ReviewInviteNotificationListener() {
               ? data.message.trim()
               : "We’d love your feedback on Expense Tracker. Tap Feedback when you have a moment.";
 
-          notifyInfo(msg);
+          notifyInfo(msg, { persistent: true });
 
           updateDoc(doc(db, "users", user.uid, "notifications", id), { delivered: true }).catch(() => {
             handledThisSession.delete(id);

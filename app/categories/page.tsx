@@ -127,7 +127,7 @@ function Categories() {
       ) : (
         <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
           <div className="et-card !p-1.5 sm:!p-2 flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
-            <div className="flex shrink-0 flex-wrap items-stretch gap-1.5">
+            <div className="flex shrink-0 flex-wrap items-stretch gap-1.5" data-tour="categories-search-row">
               <input
                 className="et-search min-w-0 flex-[1.4] !px-2.5 !py-1.5 text-[12px]"
                 placeholder="Search categories"
@@ -146,6 +146,7 @@ function Categories() {
               <button
                 type="button"
                 className="et-btn-secondary inline-flex shrink-0 items-center gap-1.5 !min-h-9 !px-2.5 !py-1.5 text-[12px]"
+                data-tour="categories-add"
                 onClick={() => {
                   setEditingCategoryId(null);
                   setName("");
@@ -177,6 +178,7 @@ function Categories() {
                   incomeCount={incomeCategories.length}
                   expenseCount={expenseCategories.length}
                   className="shrink-0"
+                  tourAnchor="categories-tabs"
                 />
                 <div
                   role="tabpanel"

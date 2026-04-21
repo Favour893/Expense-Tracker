@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "../src/components/auth/AuthProvider";
 import { NotificationProvider } from "../src/components/notifications/NotificationProvider";
+import { SplashScreen } from "../src/components/shell/SplashScreen";
 
 export const metadata: Metadata = {
   applicationName: "Expense Tracker",
@@ -24,9 +25,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" className="h-full">
+      <body className="flex min-h-[100dvh] flex-col overflow-x-hidden antialiased">
         <NotificationProvider>
+          <SplashScreen />
           <AuthProvider>{children}</AuthProvider>
         </NotificationProvider>
       </body>

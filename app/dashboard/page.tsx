@@ -41,6 +41,7 @@ function Dashboard() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [requestingReviewForId, setRequestingReviewForId] = useState<string | null>(null);
+  const [appUsageModalOpen, setAppUsageModalOpen] = useState(false);
   const usersPageSize = 20;
 
   const userById = useMemo(() => {
@@ -125,65 +126,22 @@ function Dashboard() {
 
   return (
     <div className="flex h-0 min-h-0 w-full flex-1 flex-col gap-2 overflow-hidden">
-      <section className="et-card flex min-h-[12rem] shrink-0 flex-col overflow-hidden md:max-h-[38dvh]">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">App usage</h3>
-        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-          Totals come from aggregate docs under <code className="text-[0.7rem]">adminStats</code> (maintained outside the client).
-        </p>
-        <div className="mt-2 min-h-0 flex-1 overflow-y-auto">
-          {error ? (
-            <div className="shrink-0 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</div>
-          ) : null}
+      {error ? (
+        <div className="shrink-0 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</div>
+      ) : null}
 
-          {!summary ? (
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              No aggregate stats yet. Populate Firestore docs under <code>adminStats/summary</code> and{" "}
-              <code>adminStats/monthly/rows</code> to enable these cards.
-            </p>
-          ) : (
-            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <MetricCard label="Registered accounts" value={String(summary.totalUsers)} />
-              <MetricCard label="Entries logged (all time)" value={String(summary.totalTransactions)} />
-              <MetricCard label="Expense volume (total)" value={formatMoney(summary.totalExpenseAmount, currency)} />
-              <MetricCard label="Income volume (total)" value={formatMoney(summary.totalIncomeAmount, currency)} />
-            </div>
-          )}
-
-          {monthly.length ? (
-            <div className="mt-3 overflow-auto rounded-lg border border-slate-200 dark:border-white/10">
-              <table className="w-full min-w-[28rem] text-xs sm:text-sm">
-                <thead className="bg-slate-50 text-left text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                  <tr>
-                    <th className="px-2 py-1.5 font-semibold">Month</th>
-                    <th className="px-2 py-1.5 font-semibold">New sign-ups</th>
-                    <th className="px-2 py-1.5 font-semibold">Entries</th>
-                    <th className="px-2 py-1.5 font-semibold">Expense volume</th>
-                    <th className="px-2 py-1.5 font-semibold">Income volume</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {monthly.map((row) => (
-                    <tr key={row.id} className="border-t border-slate-200 dark:border-white/10">
-                      <td className="px-2 py-1.5">{row.monthKey}</td>
-                      <td className="px-2 py-1.5">{row.newUsers}</td>
-                      <td className="px-2 py-1.5">{row.transactions}</td>
-                      <td className="px-2 py-1.5">{formatMoney(row.expenseAmount, currency)}</td>
-                      <td className="px-2 py-1.5">{formatMoney(row.incomeAmount, currency)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : null}
+      <section className="et-card flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">User feedback</h3>
+          <button
+            type="button"
+            className="et-btn-secondary !min-h-9 shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-semibold sm:text-sm"
+            onClick={() => setAppUsageModalOpen(true)}
+          >
+            App usage
+          </button>
         </div>
-      </section>
-
-      <section className="et-card flex max-h-[min(42dvh,28rem)] shrink-0 flex-col overflow-hidden">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">User feedback</h3>
-        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-          Voluntary ratings and comments from the Feedback button. One saved review per account (updates replace the previous).
-        </p>
-        <div className="mt-2 min-h-0 flex-1 overflow-auto rounded-lg border border-slate-200 dark:border-white/10">
+        <div className="mt-2 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-lg border border-slate-200 [-webkit-overflow-scrolling:touch] dark:border-white/10">
           {!reviews.length ? (
             <div className="p-3 text-sm text-slate-600 dark:text-slate-300">{busy ? "Loading feedback..." : "No feedback submitted yet."}</div>
           ) : (
@@ -228,12 +186,8 @@ function Dashboard() {
         </div>
       </section>
 
-      <section className="et-card flex h-0 min-h-0 flex-1 flex-col overflow-hidden">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Users and activity</h3>
-        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-          Shows account identity and usage frequency only. No category names, descriptions, or transaction details are shown. Use
-          &nbsp;Request review to log an outreach row and show that user an in-app notification (not email).
-        </p>
+      <section className="et-card flex min-h-0 flex-1 flex-col overflow-hidden">
+        <h3 className="shrink-0 text-sm font-semibold text-slate-700 dark:text-slate-200">Users and activity</h3>
         <div className="mt-2 min-h-0 flex-1 overflow-auto rounded-lg border border-slate-200 dark:border-white/10">
           {!users.length ? (
             <div className="p-3 text-sm text-slate-600 dark:text-slate-300">{busy ? "Loading users..." : "No users found."}</div>
@@ -307,6 +261,76 @@ function Dashboard() {
           )}
         </div>
       </section>
+
+      {appUsageModalOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-3"
+          role="presentation"
+          onClick={() => setAppUsageModalOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="app-usage-dialog-title"
+            className="et-card flex max-h-[min(88dvh,720px)] w-full max-w-3xl flex-col overflow-hidden !p-0 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-200 px-3 py-2 dark:border-white/10">
+              <h2 id="app-usage-dialog-title" className="text-base font-semibold text-slate-800 dark:text-slate-100">
+                App usage
+              </h2>
+              <button
+                type="button"
+                className="et-btn-secondary !min-h-9 px-3 py-1.5 text-xs font-semibold sm:text-sm"
+                onClick={() => setAppUsageModalOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch]">
+              {!summary ? (
+                <p className="text-sm text-slate-600 dark:text-slate-300">
+                  No aggregate stats yet. Populate Firestore docs under <code>adminStats/summary</code> and{" "}
+                  <code>adminStats/monthly/rows</code> to enable these cards.
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <MetricCard label="Registered accounts" value={String(summary.totalUsers)} />
+                  <MetricCard label="Entries logged (all time)" value={String(summary.totalTransactions)} />
+                  <MetricCard label="Expense volume (total)" value={formatMoney(summary.totalExpenseAmount, currency)} />
+                  <MetricCard label="Income volume (total)" value={formatMoney(summary.totalIncomeAmount, currency)} />
+                </div>
+              )}
+              {monthly.length ? (
+                <div className="mt-4 overflow-auto rounded-lg border border-slate-200 dark:border-white/10">
+                  <table className="w-full min-w-[28rem] text-xs sm:text-sm">
+                    <thead className="bg-slate-50 text-left text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                      <tr>
+                        <th className="px-2 py-1.5 font-semibold">Month</th>
+                        <th className="px-2 py-1.5 font-semibold">New sign-ups</th>
+                        <th className="px-2 py-1.5 font-semibold">Entries</th>
+                        <th className="px-2 py-1.5 font-semibold">Expense volume</th>
+                        <th className="px-2 py-1.5 font-semibold">Income volume</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {monthly.map((row) => (
+                        <tr key={row.id} className="border-t border-slate-200 dark:border-white/10">
+                          <td className="px-2 py-1.5">{row.monthKey}</td>
+                          <td className="px-2 py-1.5">{row.newUsers}</td>
+                          <td className="px-2 py-1.5">{row.transactions}</td>
+                          <td className="px-2 py-1.5">{formatMoney(row.expenseAmount, currency)}</td>
+                          <td className="px-2 py-1.5">{formatMoney(row.incomeAmount, currency)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

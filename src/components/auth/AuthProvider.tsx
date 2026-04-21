@@ -12,6 +12,7 @@ import { getProfile, getUserDocument, saveUserDocument, type UserProfile, type U
 import { CashLogo } from "../branding/CashLogo";
 import { VoluntaryReviewButton } from "../feedback/VoluntaryReviewButton";
 import { ReviewInviteNotificationListener } from "../notifications/ReviewInviteNotificationListener";
+import { OnboardingTour } from "../onboarding/OnboardingTour";
 
 type AuthContextValue = {
   user: User | null;
@@ -376,10 +377,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
               <nav className="col-span-2 row-start-2 flex justify-center pb-0.5 md:col-span-1 md:col-start-2 md:row-start-1 md:pb-0">
                 <div className="flex w-full items-center justify-between gap-1 px-1 md:w-auto md:justify-center md:gap-3">
-                  <NavLink href="/categories" label="Categories" active={pathname === "/categories"} />
-                  <NavLink href="/entries" label="Entries" active={pathname === "/entries"} />
-                  <NavLink href="/reports" label="Reports" active={pathname === "/reports"} />
-                  {userDoc?.role === "admin" ? <NavLink href="/dashboard" label="Dashboard" active={pathname === "/dashboard"} /> : null}
+                  <NavLink href="/categories" label="Categories" active={pathname === "/categories"} tourId="nav-categories" />
+                  <NavLink href="/entries" label="Entries" active={pathname === "/entries"} tourId="nav-entries" />
+                  <NavLink href="/reports" label="Reports" active={pathname === "/reports"} tourId="nav-reports" />
+                  {userDoc?.role === "admin" ? (
+                    <NavLink href="/dashboard" label="Dashboard" active={pathname === "/dashboard"} />
+                  ) : null}
                 </div>
               </nav>
             </div>
@@ -389,16 +392,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           {children}
         </main>
         {showNav ? <VoluntaryReviewButton /> : null}
+        {showNav && user ? <OnboardingTour /> : null}
         {user ? <ReviewInviteNotificationListener /> : null}
       </div>
     </AuthContext.Provider>
   );
 }
 
-function NavLink({ href, label, active }: { href: string; label: string; active?: boolean }) {
+function NavLink({ href, label, active, tourId }: { href: string; label: string; active?: boolean; tourId?: string }) {
   return (
     <Link
       href={href}
+      data-tour={tourId}
       className={`flex-1 whitespace-nowrap text-center text-xs font-medium transition md:flex-none md:text-sm ${
         active
           ? "text-indigo-600 underline decoration-indigo-400 underline-offset-4 dark:text-indigo-300"
