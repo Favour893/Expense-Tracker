@@ -373,13 +373,6 @@ function Entries() {
 
   return (
     <div className="flex h-0 min-h-0 w-full min-w-0 flex-1 flex-col gap-1 overflow-hidden sm:gap-2">
-      <div className="shrink-0">
-        <h1 className="text-lg font-bold text-indigo-700 dark:text-indigo-300 sm:text-2xl">Entries</h1>
-        <p className="hidden mt-0.5 line-clamp-2 text-xs text-slate-600 dark:text-slate-300 sm:block sm:mt-1 sm:text-sm">
-          Add every income and expense, and keep it categorized.
-        </p>
-      </div>
-
       {pageLoading ? (
         <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
           <PageLoadingShimmer label="Loading entries" />
@@ -388,43 +381,44 @@ function Entries() {
         <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
           <div className="et-card !p-2 sm:!p-3 flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
             <div className="flex shrink-0 flex-col gap-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  className="et-btn-secondary inline-flex shrink-0 items-center gap-2 !min-h-10 !px-3 !py-2 text-sm"
-                  onClick={openAddTransactionModal}
-                >
-                  <span className="text-lg font-bold">+</span>
-                  Add
-                </button>
-                <label className="flex min-w-[10rem] flex-1 items-center gap-2 text-xs text-slate-600 dark:text-slate-300 sm:min-w-[12rem] sm:text-sm">
-                  <span className="shrink-0 font-medium">Month</span>
-                  <input
-                    className="et-input min-w-0 flex-1 !min-h-[2.5rem] !px-3 !py-2 text-sm sm:max-w-[11rem]"
-                    type="month"
-                    value={monthKey}
-                    onChange={(e) => setMonthKey(e.target.value)}
-                  />
-                </label>
-                <label className="flex shrink-0 items-center gap-2 text-xs text-slate-600 dark:text-slate-300 sm:text-sm">
-                  <span className="shrink-0 font-medium">Currency</span>
-                  <select
-                    className="et-input min-w-[8rem] !min-h-[2.5rem] !px-3 !py-2 text-sm sm:min-w-[10rem]"
-                    value={currency}
-                    disabled={currencyBusy}
-                    onChange={(e) => onCurrencyChange(e.target.value)}
-                    aria-label="Display currency for amounts"
+              <div className="flex w-full items-center justify-between gap-2 whitespace-nowrap">
+                  <button
+                    type="button"
+                    className="et-btn-secondary inline-flex w-[4.25rem] shrink-0 items-center justify-center gap-1 !min-h-9 !px-2 !py-1.5 text-xs sm:w-auto sm:gap-2 sm:!min-h-10 sm:!px-3 sm:!py-2 sm:text-sm"
+                    onClick={openAddTransactionModal}
                   >
-                    {CURRENCIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <span className="ml-auto shrink-0 text-xs text-slate-600 dark:text-slate-300 sm:text-sm">
-                  {filteredTransactions.length} items
-                </span>
+                    <span className="text-base font-bold sm:text-lg">+</span>
+                    Add
+                  </button>
+                  <label className="flex min-w-0 flex-1 items-center gap-1 text-xs text-slate-600 dark:text-slate-300 sm:flex-initial sm:gap-2 sm:text-sm">
+                    <span className="hidden shrink-0 font-medium sm:inline">Month</span>
+                    <input
+                      className="et-input w-full min-w-0 !min-h-9 !px-2 !py-1.5 text-xs sm:w-[9.25rem] sm:!min-h-[2.5rem] sm:!px-3 sm:!py-2 sm:text-sm"
+                      type="month"
+                      value={monthKey}
+                      onChange={(e) => setMonthKey(e.target.value)}
+                      aria-label="Month"
+                    />
+                  </label>
+                  <label className="flex shrink-0 items-center gap-1 text-xs text-slate-600 dark:text-slate-300 sm:gap-2 sm:text-sm">
+                    <span className="hidden shrink-0 font-medium sm:inline">Currency</span>
+                    <select
+                      className="et-input w-[5.75rem] shrink-0 !min-h-9 !px-2 !py-1.5 text-xs sm:w-[8.5rem] sm:!min-h-[2.5rem] sm:!px-3 sm:!py-2 sm:text-sm"
+                      value={currency}
+                      disabled={currencyBusy}
+                      onChange={(e) => onCurrencyChange(e.target.value)}
+                      aria-label="Display currency for amounts"
+                    >
+                      {CURRENCIES.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <span className="ml-auto hidden shrink-0 pl-1 text-xs text-slate-600 dark:text-slate-300 sm:inline sm:text-sm">
+                    {filteredTransactions.length} items
+                  </span>
               </div>
 
               <div className="flex flex-wrap items-stretch gap-2">
@@ -438,7 +432,7 @@ function Entries() {
                 />
                 <button
                   type="button"
-                  className="et-btn-secondary min-w-[5.5rem] shrink-0 !min-h-10 !px-3 !py-2 text-sm"
+                  className="et-btn-secondary w-[4.5rem] shrink-0 !min-h-10 !px-2 !py-2 text-sm"
                   onClick={() => setSearchText("")}
                 >
                   Clear

@@ -120,13 +120,6 @@ function Categories() {
 
   return (
     <div className="flex h-0 min-h-0 w-full min-w-0 flex-1 flex-col gap-1 overflow-hidden sm:gap-2">
-      <div className="shrink-0">
-        <h1 className="text-lg font-bold text-indigo-700 dark:text-indigo-300 sm:text-2xl">Categories</h1>
-        <p className="hidden mt-0.5 line-clamp-2 text-xs text-slate-600 dark:text-slate-300 sm:block sm:mt-1 sm:text-sm">
-          Create income/expense categories so every entry has a clear purpose.
-        </p>
-      </div>
-
       {initialLoad ? (
         <div className="flex h-0 min-h-0 w-full flex-1 flex-col overflow-hidden">
           <PageLoadingShimmer label="Loading categories" />
