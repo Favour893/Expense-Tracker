@@ -99,7 +99,12 @@ async function readUserUsage(uid: string): Promise<Pick<DirectoryUserUsage, "tot
     getCountFromServer(query(txCol, where("date", ">=", since))),
     getDocs(query(txCol, orderBy("date", "desc"), limit(1)))
   ]);
-  const lastEntryAt = latestSnap.empty ? null : toDateSafe(latestSnap.docs[0].data().date);
+  const lastEntryData = latestSnap.empty ? null : latestSnap.docs[0].data();
+  const lastEntryAt =
+    toDateSafe(lastEntryData?.updatedAt) ||
+    toDateSafe(lastEntryData?.createdAt) ||
+    toDateSafe(lastEntryData?.date) ||
+    null;
   return {
     totalEntries: totalSnap.data().count,
     entriesLast30Days: recentSnap.data().count,
