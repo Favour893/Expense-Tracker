@@ -365,7 +365,7 @@ function Reports() {
                 </p>
                 <div className="mt-3 overflow-visible rounded-xl border border-slate-200 dark:border-white/10">
                   <table className="report-table min-w-full text-center text-sm text-slate-800 dark:text-slate-100">
-                    <thead className="bg-slate-50 text-slate-700 dark:bg-white/5 dark:text-slate-200">
+                    <thead className="sticky top-0 z-10 bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-200">
                       <tr>
                         <th className="px-2 py-1.5 font-semibold">No.</th>
                         <th className="px-2 py-1.5 font-semibold">Date</th>
@@ -415,7 +415,7 @@ function Reports() {
               />
             </div>
 
-            <div className="mt-1 min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] touch-pan-y">
+            <div className="mt-1 min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain [-webkit-overflow-scrolling:touch] touch-pan-y">
               {!tableRows.length ? (
                 <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300/80 bg-slate-50/70 px-3 py-6 text-center dark:border-white/20 dark:bg-white/5">
                   <div className="mb-2 text-3xl" aria-hidden="true">
@@ -425,9 +425,9 @@ function Reports() {
                   <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">Add entries in this date range to see them here.</div>
                 </div>
               ) : (
-                <div className="max-w-full min-w-0 overflow-x-auto rounded-lg border border-slate-200 dark:border-white/10 sm:rounded-xl">
+                <div className="max-w-full min-w-0 rounded-lg border border-slate-200 dark:border-white/10 sm:rounded-xl">
                   <table className="w-max min-w-full table-auto text-center text-xs sm:text-sm">
-                    <thead className="bg-slate-50 text-slate-700 dark:bg-white/5 dark:text-slate-200">
+                    <thead className="sticky top-0 z-20 bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-200 [&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-20 [&>tr>th]:bg-slate-50 dark:[&>tr>th]:bg-slate-900">
                       <tr>
                         <th className="min-w-[5.5rem] whitespace-nowrap px-2 py-1.5 font-semibold sm:px-3 sm:py-2">
                           Date
