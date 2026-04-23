@@ -113,9 +113,15 @@ export function ReportPreview({
             <div className="mx-auto w-[8.25rem] sm:w-full">
               <svg viewBox="0 0 100 100" role="img" aria-label="Expense category pie chart" className="h-auto w-full">
                 {pieSlices.map((slice) => (
-                  <path key={slice.id} d={slice.path} fill={slice.color} stroke="#ffffff" strokeWidth="1" />
+                  <path
+                    key={slice.id}
+                    d={slice.path}
+                    fill={slice.color}
+                    stroke="var(--et-chart-slice-stroke)"
+                    strokeWidth="1"
+                  />
                 ))}
-                <circle cx="50" cy="50" r="24" fill="rgba(255,255,255,0.88)" />
+                <circle cx="50" cy="50" r="24" fill="var(--et-chart-donut-center)" />
                 <text x="50" y="47" textAnchor="middle" className="fill-slate-700 text-[5px] font-semibold dark:fill-slate-100">
                   Total
                 </text>

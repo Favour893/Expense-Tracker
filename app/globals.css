@@ -5,6 +5,11 @@
 html {
   scrollbar-gutter: stable;
   height: 100%;
+  --et-scrollbar-track: #e2e8f0;
+  --et-scrollbar-thumb: #94a3b8;
+  --et-scrollbar-thumb-hover: #64748b;
+  --et-chart-slice-stroke: #ffffff;
+  --et-chart-donut-center: rgba(255, 255, 255, 0.88);
 }
 
 html,
@@ -27,6 +32,39 @@ body {
     radial-gradient(1000px 600px at -10% -10%, rgba(99, 102, 241, 0.25), transparent),
     radial-gradient(900px 500px at 120% -20%, rgba(56, 189, 248, 0.16), transparent),
     #020617;
+}
+
+.dark {
+  --et-scrollbar-track: rgba(15, 23, 42, 0.85);
+  --et-scrollbar-thumb: rgba(148, 163, 184, 0.6);
+  --et-scrollbar-thumb-hover: rgba(203, 213, 225, 0.85);
+  --et-chart-slice-stroke: rgba(15, 23, 42, 0.92);
+  --et-chart-donut-center: rgba(15, 23, 42, 0.88);
+}
+
+/* Theme-aware scrollbars (Firefox + Chromium/WebKit). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--et-scrollbar-thumb) var(--et-scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--et-scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--et-scrollbar-thumb);
+  border-radius: 9999px;
+  border: 2px solid var(--et-scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--et-scrollbar-thumb-hover);
 }
 
 @layer components {
