@@ -113,7 +113,7 @@ export function VoluntaryReviewButton() {
           const dx = e.clientX - drag.startX;
           const dy = e.clientY - drag.startY;
           const next = clampToViewport(drag.originX + dx, drag.originY + dy, btn.offsetWidth, btn.offsetHeight);
-          if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+          if (Math.hypot(dx, dy) > 8) {
             drag.dragged = true;
             suppressClickRef.current = true;
           }
@@ -125,6 +125,9 @@ export function VoluntaryReviewButton() {
           const drag = dragRef.current;
           if (btn && drag && drag.pointerId === e.pointerId) {
             btn.releasePointerCapture(e.pointerId);
+            if (!drag.dragged) {
+              setOpen(true);
+            }
           }
           dragRef.current = null;
         }}
@@ -138,6 +141,7 @@ export function VoluntaryReviewButton() {
           dragRef.current = null;
         }}
         onClick={() => {
+          if (!isLargeScreen) return;
           if (suppressClickRef.current) {
             suppressClickRef.current = false;
             return;

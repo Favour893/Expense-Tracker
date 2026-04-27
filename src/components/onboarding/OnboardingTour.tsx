@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 import { useAuth } from "../auth/AuthProvider";
 import { ONBOARDING_STEPS, ONBOARDING_STORAGE_KEY } from "./onboardingConfig";
@@ -72,11 +72,10 @@ function useTargetRect(selector: string | undefined) {
 
 /** First-time tour: each step highlights one `data-tour` anchor on the active route. */
 export function OnboardingTour() {
-  const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
 
-  const [completedInStorage, setCompletedInStorage] = useState<boolean | null>(null);
+  const [completedByRoute, setCompletedByRoute] = useState<Record<string, boolean> | null>(null);
   const [step, setStep] = useState(0);
   const [mounted, setMounted] = useState(false);
 
@@ -84,31 +83,53 @@ export function OnboardingTour() {
 
   useEffect(() => {
     try {
-      setCompletedInStorage(localStorage.getItem(ONBOARDING_STORAGE_KEY) === "done");
+      const raw = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+      if (!raw || raw === "done") {
+        setCompletedByRoute({});
+        return;
+      }
+      const parsed = JSON.parse(raw) as unknown;
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        const normalized = Object.fromEntries(
+          Object.entries(parsed as Record<string, unknown>).map(([k, v]) => [k, Boolean(v)])
+        );
+        setCompletedByRoute(normalized);
+        return;
+      }
+      setCompletedByRoute({});
     } catch {
-      setCompletedInStorage(true);
+      setCompletedByRoute({});
     }
   }, []);
 
-  const showTour = Boolean(user && completedInStorage === false && pathname !== "/login");
+  const currentRouteSteps = useMemo(
+    () => ONBOARDING_STEPS.filter((s) => s.route === pathname),
+    [pathname]
+  );
+
+  const currentRouteKey = useMemo(() => {
+    if (!pathname || pathname === "/") return "home";
+    return pathname.replace(/^\/+/, "") || "home";
+  }, [pathname]);
+
+  const routeDone = Boolean(completedByRoute?.[currentRouteKey]);
+  const showTour = Boolean(user && completedByRoute && pathname !== "/login" && currentRouteSteps.length > 0 && !routeDone);
 
   useEffect(() => {
-    if (!showTour || completedInStorage !== false) return;
+    setStep(0);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!showTour) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
     };
-  }, [showTour, completedInStorage]);
+  }, [showTour]);
 
-  const current = ONBOARDING_STEPS[step];
+  const current = currentRouteSteps[step];
   const targetId = current?.target;
-
-  useEffect(() => {
-    if (!showTour || step >= ONBOARDING_STEPS.length) return;
-    const route = ONBOARDING_STEPS[step].route;
-    if (pathname !== route) router.replace(route);
-  }, [showTour, step, pathname, router]);
 
   const rect = useTargetRect(showTour ? targetId : undefined);
 
@@ -139,19 +160,22 @@ export function OnboardingTour() {
     return { top, left, width: cardW } as React.CSSProperties;
   }, [rect]);
 
-  function dismissTour(markDone: boolean) {
-    if (markDone) {
+  function dismissTour(markCurrentRouteDone: boolean) {
+    if (!markCurrentRouteDone) return;
+    setCompletedByRoute((prev) => {
+      const base = prev ?? {};
+      const next = { ...base, [currentRouteKey]: true };
       try {
-        localStorage.setItem(ONBOARDING_STORAGE_KEY, "done");
+        localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(next));
       } catch {
         /* ignore */
       }
-    }
-    setCompletedInStorage(true);
+      return next;
+    });
   }
 
   function onNext() {
-    if (step >= ONBOARDING_STEPS.length - 1) {
+    if (step >= currentRouteSteps.length - 1) {
       dismissTour(true);
       return;
     }
@@ -162,9 +186,9 @@ export function OnboardingTour() {
     setStep((s) => Math.max(0, s - 1));
   }
 
-  if (!mounted || !showTour || completedInStorage !== false) return null;
+  if (!mounted || !showTour || !current) return null;
 
-  const isLast = step >= ONBOARDING_STEPS.length - 1;
+  const isLast = step >= currentRouteSteps.length - 1;
 
   const spotlight =
     rect && rect.width > 0 && rect.height > 0 ? (
@@ -221,7 +245,7 @@ export function OnboardingTour() {
           </button>
           <div className="flex items-center gap-2">
             <span className="text-[11px] tabular-nums text-slate-400 dark:text-slate-500">
-              {step + 1}/{ONBOARDING_STEPS.length}
+              {step + 1}/{currentRouteSteps.length}
             </span>
             <button type="button" className="et-btn-primary px-4 py-1.5 text-xs sm:text-sm" onClick={onNext}>
               {isLast ? "Done" : "Next"}
