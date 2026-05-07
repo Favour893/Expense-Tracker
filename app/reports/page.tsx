@@ -5,13 +5,16 @@ import { RequireAuth } from "../../src/components/auth/RequireAuth";
 import { useAuth } from "../../src/components/auth/AuthProvider";
 import type { Category, Transaction } from "../../src/types/app";
 import { listCategories } from "../../src/lib/repos/categoriesRepo";
-import { listTransactionsByDateRange } from "../../src/lib/repos/entriesRepo";
+import { listTransactionsByDateRange, listTransactionsByMonth } from "../../src/lib/repos/entriesRepo";
 import {
   computeMonthlyReport,
   computeTop3ExpensePercentSumRounded1,
   formatReportDateRangeLabel,
+  isFullCalendarMonthRange,
+  netFromTransactions,
   previousEqualCalendarRange,
-  renderNarrative
+  renderNarrative,
+  shiftMonthKey
 } from "../../src/lib/reporting/reportModel";
 import { ReportPreview } from "../../src/components/reports/ReportPreview";
 import { ExportPdfButton } from "../../src/components/reports/ExportPdfButton";
@@ -73,6 +76,8 @@ function Reports() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [lastMonthTransactions, setLastMonthTransactions] = useState<Transaction[]>([]);
+  /** Previous calendar month net; added to this month’s income when the range is one full month. */
+  const [carryForwardNet, setCarryForwardNet] = useState(0);
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,9 +101,10 @@ function Reports() {
       transactions,
       categories,
       monthKey: reportMonthKey,
-      lastMonthTransactions
+      lastMonthTransactions,
+      startingIncome: carryForwardNet
     });
-  }, [categories, lastMonthTransactions, reportMonthKey, transactions]);
+  }, [carryForwardNet, categories, lastMonthTransactions, reportMonthKey, transactions]);
 
   const expenseTransactions = useMemo(
     () => transactions.filter((t) => t.type === "expense"),
@@ -245,6 +251,20 @@ function Reports() {
         }
       }
       setLastMonthTransactions(lastTxs);
+
+      let carry = 0;
+      if (isFullCalendarMonthRange(startIso, endIso)) {
+        const prevMonthKey = shiftMonthKey(startIso.slice(0, 7), -1);
+        if (prevMonthKey) {
+          try {
+            const priorMonthTxs = await listTransactionsByMonth(uid, prevMonthKey);
+            carry = netFromTransactions(priorMonthTxs);
+          } catch {
+            carry = 0;
+          }
+        }
+      }
+      setCarryForwardNet(carry);
     } catch (e: any) {
       setError(e?.message || String(e));
     } finally {
@@ -257,6 +277,7 @@ function Reports() {
     if (!rangeStart || !rangeEnd || rangeStart > rangeEnd) {
       setTransactions([]);
       setLastMonthTransactions([]);
+      setCarryForwardNet(0);
       return;
     }
     loadAll(rangeStart, rangeEnd).catch((e) => setError(e?.message || String(e)));

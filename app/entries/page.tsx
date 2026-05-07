@@ -19,6 +19,7 @@ import { IncomeExpenseTabs, type IncomeExpenseTab } from "../../src/components/u
 import { CURRENCIES } from "../../src/lib/constants/countries";
 import { getUserDocument, saveProfile, saveUserDocument } from "../../src/lib/repos/profileRepo";
 import { formatUkDate } from "../../src/lib/formatDisplayDate";
+import { formatReportMonthLabel, netFromTransactions, shiftMonthKey } from "../../src/lib/reporting/reportModel";
 
 function monthKeyFromDateInput(dateStr: string) {
   const [y, m] = String(dateStr || "").split("-");
@@ -92,6 +93,8 @@ function Entries() {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  /** All transactions for the calendar month before `monthKey` (used for carry-forward net). */
+  const [prevMonthTransactions, setPrevMonthTransactions] = useState<Transaction[]>([]);
 
   const [monthKey, setMonthKey] = useState<string>(() => currentMonthKey());
   const [busy, setBusy] = useState(false);
@@ -200,6 +203,23 @@ function Entries() {
     [expenseTransactions]
   );
 
+  const prevMonthKey = useMemo(() => shiftMonthKey(monthKey, -1), [monthKey]);
+
+  const startingIncomeFromPriorMonth = useMemo(
+    () => netFromTransactions(prevMonthTransactions),
+    [prevMonthTransactions]
+  );
+
+  const monthIncomeTotal = useMemo(
+    () => transactions.filter((t) => t.type === "income").reduce((s, t) => s + Number(t.amount || 0), 0),
+    [transactions]
+  );
+  const monthExpenseTotal = useMemo(
+    () => transactions.filter((t) => t.type === "expense").reduce((s, t) => s + Number(t.amount || 0), 0),
+    [transactions]
+  );
+  const monthNet = startingIncomeFromPriorMonth + monthIncomeTotal - monthExpenseTotal;
+
   async function refreshCategories() {
     if (!uid) return;
     const data = await listCategories(uid);
@@ -230,19 +250,30 @@ function Entries() {
 
   async function refreshTransactions(mk: string) {
     if (!uid) return;
-    const data = await listTransactionsByMonth(uid, mk);
+    const priorKey = shiftMonthKey(mk, -1);
+    const [data, prevData] = await Promise.all([
+      listTransactionsByMonth(uid, mk),
+      priorKey ? listTransactionsByMonth(uid, priorKey) : Promise.resolve([] as Transaction[])
+    ]);
     setTransactions(data);
+    setPrevMonthTransactions(prevData);
   }
 
   useEffect(() => {
     if (!uid) return;
     let cancelled = false;
     setPageLoading(true);
-    Promise.all([listCategories(uid), listTransactionsByMonth(uid, monthKey)])
-      .then(([cats, txs]) => {
+    const priorKey = shiftMonthKey(monthKey, -1);
+    Promise.all([
+      listCategories(uid),
+      listTransactionsByMonth(uid, monthKey),
+      priorKey ? listTransactionsByMonth(uid, priorKey) : Promise.resolve([] as Transaction[])
+    ])
+      .then(([cats, txs, prevTxs]) => {
         if (cancelled) return;
         setCategories(cats);
         setTransactions(txs);
+        setPrevMonthTransactions(prevTxs);
       })
       .catch((e: any) => {
         if (!cancelled) setError(e?.message || String(e));
@@ -453,12 +484,28 @@ function Entries() {
               ))}
             </datalist>
 
+            <div className="mt-1 flex shrink-0 flex-wrap items-baseline gap-x-3 gap-y-1 text-[11px] text-slate-600 dark:text-slate-300 sm:text-xs">
+              <span title="Previous month’s income minus expenses, carried into this month">
+                Starting income:{" "}
+                <strong className="tabular-nums text-slate-800 dark:text-slate-100">
+                  {formatMoney(startingIncomeFromPriorMonth, currency)}
+                </strong>
+                {prevMonthKey ? (
+                  <span className="text-slate-500 dark:text-slate-400"> ({formatReportMonthLabel(prevMonthKey)})</span>
+                ) : null}
+              </span>
+              <span>
+                Month net:{" "}
+                <strong className="tabular-nums text-slate-800 dark:text-slate-100">{formatMoney(monthNet, currency)}</strong>
+              </span>
+            </div>
+
             <div className="mt-1 flex h-0 min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
               <IncomeExpenseTabs
                 panelId={entriesPanelId}
                 value={listTab}
                 onChange={setListTab}
-                incomeCount={incomeTransactions.length}
+                incomeCount={incomeTransactions.length + (Math.abs(startingIncomeFromPriorMonth) > 1e-9 ? 1 : 0)}
                 expenseCount={expenseTransactions.length}
                 className="shrink-0"
                 tourAnchor="entries-tabs"
@@ -475,6 +522,21 @@ function Entries() {
               >
                 <h3 className="sr-only">{listTab === "income" ? "Income entries" : "Expense entries"}</h3>
                 <div className="grid gap-2">
+                  {listTab === "income" && Math.abs(startingIncomeFromPriorMonth) > 1e-9 ? (
+                    <div className="rounded-xl border border-dashed border-emerald-400/80 bg-white/90 p-2.5 dark:border-emerald-500/40 dark:bg-white/5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="font-semibold text-emerald-900 dark:text-emerald-100">Starting income</div>
+                          <div className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">
+                            Net from {prevMonthKey ? formatReportMonthLabel(prevMonthKey) : "previous month"}
+                          </div>
+                        </div>
+                        <div className="text-right text-sm font-bold tabular-nums text-emerald-900 dark:text-emerald-100">
+                          {formatMoney(startingIncomeFromPriorMonth, currency)}
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
                   {(listTab === "income" ? sortedIncomeTxs : sortedExpenseTxs).map((t) => {
                     const catName = categories.find((c) => c.id === t.categoryId)?.name || "Unknown";
                     const sign = t.type === "income" ? "+" : "-";
@@ -516,8 +578,11 @@ function Entries() {
                       </div>
                     );
                   })}
-                  {listTab === "income" && !sortedIncomeTxs.length ? (
+                  {listTab === "income" && !sortedIncomeTxs.length && Math.abs(startingIncomeFromPriorMonth) <= 1e-9 ? (
                     <div className="text-sm text-slate-600 dark:text-slate-300">No income entries found for {monthKey}.</div>
+                  ) : null}
+                  {listTab === "income" && !sortedIncomeTxs.length && Math.abs(startingIncomeFromPriorMonth) > 1e-9 ? (
+                    <div className="text-sm text-slate-600 dark:text-slate-300">No other income entries this month yet.</div>
                   ) : null}
                   {listTab === "expense" && !sortedExpenseTxs.length ? (
                     <div className="text-sm text-slate-600 dark:text-slate-300">No expense entries found for {monthKey}.</div>

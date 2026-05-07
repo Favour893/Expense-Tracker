@@ -10,6 +10,11 @@ export type ExpenseBreakdownRow = {
 export type MonthlyReport = {
   monthKey: string;
   totals: {
+    /** Sum of income transactions in the period (excludes carry-forward). */
+    incomeFromEntries: number;
+    /** Previous calendar month’s net (income − expenses); starting position for this month. */
+    startingIncome: number;
+    /** `startingIncome` + `incomeFromEntries` — what the UI labels “Income”. */
     incomeTotal: number;
     expensesTotal: number;
     net: number;
@@ -108,6 +113,25 @@ export function formatReportDateRangeLabel(startIso: string, endIso: string, loc
   return `${a} – ${b}`;
 }
 
+/** Net cash flow for a set of transactions: sum(income) − sum(expenses). */
+export function netFromTransactions(transactions: Transaction[]): number {
+  const txs = Array.isArray(transactions) ? transactions : [];
+  const income = txs.filter((t) => t.type === "income").reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
+  const expenses = txs.filter((t) => t.type === "expense").reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
+  return income - expenses;
+}
+
+/** True when [startIso, endIso] is exactly one local-calendar month (day 1 → last day of that month). */
+export function isFullCalendarMonthRange(startIso: string, endIso: string): boolean {
+  const s = parseIsoDateLocal(startIso);
+  const e = parseIsoDateLocal(endIso);
+  if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime()) || s > e) return false;
+  if (s.getFullYear() !== e.getFullYear() || s.getMonth() !== e.getMonth()) return false;
+  if (s.getDate() !== 1) return false;
+  const lastDay = new Date(s.getFullYear(), s.getMonth() + 1, 0).getDate();
+  return e.getDate() === lastDay;
+}
+
 /** Calendar period immediately before `startIso`, same number of inclusive days as [startIso, endIso]. */
 export function previousEqualCalendarRange(startIso: string, endIso: string): { start: string; end: string } | null {
   const s = parseIsoDateLocal(startIso);
@@ -149,15 +173,19 @@ export function computeMonthlyReport(opts: {
   categories: Category[];
   monthKey: string;
   lastMonthTransactions: Transaction[];
+  /** Previous calendar month net; becomes starting income for this month when using full-month views. */
+  startingIncome?: number;
 }): MonthlyReport {
-  const { transactions, categories, monthKey, lastMonthTransactions } = opts;
+  const { transactions, categories, monthKey, lastMonthTransactions, startingIncome: startingIncomeOpt } = opts;
   const txs = Array.isArray(transactions) ? transactions : [];
   const catsById = new Map((categories || []).map((c) => [c.id, c]));
 
   const incomeTxs = txs.filter((t) => t.type === "income");
   const expenseTxs = txs.filter((t) => t.type === "expense");
 
-  const incomeTotal = incomeTxs.reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
+  const incomeFromEntries = incomeTxs.reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
+  const startingIncome = Number(startingIncomeOpt) || 0;
+  const incomeTotal = startingIncome + incomeFromEntries;
   const expensesTotal = expenseTxs.reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
   const net = incomeTotal - expensesTotal;
 
@@ -192,7 +220,7 @@ export function computeMonthlyReport(opts: {
 
   return {
     monthKey,
-    totals: { incomeTotal, expensesTotal, net },
+    totals: { incomeFromEntries, startingIncome, incomeTotal, expensesTotal, net },
     breakdown,
     narrative: {
       topCategoryName: topCategory ? topCategory.categoryName : null,
@@ -229,7 +257,11 @@ export function renderNarrative(opts: {
   } = opts;
   const monthTitle = periodLabel || monthKeyToTitle(monthKey || report?.monthKey, locale);
 
-  const { incomeTotal, expensesTotal } = report?.totals || { incomeTotal: 0, expensesTotal: 0 };
+  const { incomeTotal, expensesTotal, startingIncome = 0 } = report?.totals || {
+    incomeTotal: 0,
+    expensesTotal: 0,
+    startingIncome: 0
+  };
   const narrative = report?.narrative || ({} as MonthlyReport["narrative"]);
 
   const topCategoryName = narrative.topCategoryName;
@@ -250,6 +282,13 @@ export function renderNarrative(opts: {
     lines.push(`Your biggest expense category in ${monthTitle} was ${topCategoryName}.`);
   } else {
     lines.push(`You had no expenses recorded for ${monthTitle}.`);
+  }
+
+  if (Math.abs(Number(startingIncome) || 0) > 1e-9) {
+    const carry = formatMoney(Number(startingIncome) || 0, currency, locale);
+    lines.push(
+      `Your income total for this view includes ${carry} carried forward from the previous calendar month’s net (income minus expenses).`
+    );
   }
 
   if (top3PctDisplay > 0 && top3BasisTotal > 0) {

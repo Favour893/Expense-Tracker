@@ -7,6 +7,8 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "../auth/AuthProvider";
 import { ONBOARDING_STEPS, ONBOARDING_STORAGE_KEY } from "./onboardingConfig";
 
+const ONBOARDING_ALL_DONE_KEY = "__all__";
+
 function BodyWithBold({ text }: { text: string }) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return (
@@ -76,31 +78,60 @@ export function OnboardingTour() {
   const { user } = useAuth();
 
   const [completedByRoute, setCompletedByRoute] = useState<Record<string, boolean> | null>(null);
+  /** False until we read localStorage for this user — avoids showing the tour before we know they already finished. */
+  const [storageHydrated, setStorageHydrated] = useState(false);
   const [step, setStep] = useState(0);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+    if (!user?.uid) {
+      setStorageHydrated(false);
+      setCompletedByRoute(null);
+      return;
+    }
+
+    function parseStored(raw: string | null): Record<string, boolean> {
       if (!raw || raw === "done") {
-        setCompletedByRoute({});
-        return;
+        return raw === "done" ? { [ONBOARDING_ALL_DONE_KEY]: true } : {};
       }
-      const parsed = JSON.parse(raw) as unknown;
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-        const normalized = Object.fromEntries(
-          Object.entries(parsed as Record<string, unknown>).map(([k, v]) => [k, Boolean(v)])
-        );
-        setCompletedByRoute(normalized);
-        return;
+      try {
+        const parsed = JSON.parse(raw) as unknown;
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          return Object.fromEntries(
+            Object.entries(parsed as Record<string, unknown>).map(([k, v]) => [k, Boolean(v)])
+          );
+        }
+      } catch {
+        /* ignore */
       }
-      setCompletedByRoute({});
+      return {};
+    }
+
+    try {
+      const scopedKey = `${ONBOARDING_STORAGE_KEY}:${user.uid}`;
+      let raw = localStorage.getItem(scopedKey);
+
+      if (raw == null) {
+        const legacy = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+        if (legacy != null) {
+          raw = legacy;
+          try {
+            localStorage.setItem(scopedKey, legacy);
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+
+      setCompletedByRoute(parseStored(raw));
     } catch {
       setCompletedByRoute({});
+    } finally {
+      setStorageHydrated(true);
     }
-  }, []);
+  }, [user?.uid]);
 
   const currentRouteSteps = useMemo(
     () => ONBOARDING_STEPS.filter((s) => s.route === pathname),
@@ -112,8 +143,17 @@ export function OnboardingTour() {
     return pathname.replace(/^\/+/, "") || "home";
   }, [pathname]);
 
+  const allDone = Boolean(completedByRoute?.[ONBOARDING_ALL_DONE_KEY]);
   const routeDone = Boolean(completedByRoute?.[currentRouteKey]);
-  const showTour = Boolean(user && completedByRoute && pathname !== "/login" && currentRouteSteps.length > 0 && !routeDone);
+  const showTour = Boolean(
+    user &&
+      storageHydrated &&
+      completedByRoute &&
+      pathname !== "/login" &&
+      currentRouteSteps.length > 0 &&
+      !allDone &&
+      !routeDone
+  );
 
   useEffect(() => {
     setStep(0);
@@ -161,12 +201,20 @@ export function OnboardingTour() {
   }, [rect]);
 
   function dismissTour(markCurrentRouteDone: boolean) {
-    if (!markCurrentRouteDone) return;
+    if (!markCurrentRouteDone || !user?.uid) return;
+    const uid = user.uid;
     setCompletedByRoute((prev) => {
       const base = prev ?? {};
       const next = { ...base, [currentRouteKey]: true };
+      const requiredRoutes = Array.from(new Set(ONBOARDING_STEPS.map((s) => s.route.replace(/^\/+/, "") || "home")));
+      const completedAllRoutes = requiredRoutes.every((routeKey) => Boolean(next[routeKey]));
+      if (completedAllRoutes) {
+        next[ONBOARDING_ALL_DONE_KEY] = true;
+      }
+      const scopedKey = `${ONBOARDING_STORAGE_KEY}:${uid}`;
+      const payload = completedAllRoutes ? "done" : JSON.stringify(next);
       try {
-        localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(next));
+        localStorage.setItem(scopedKey, payload);
       } catch {
         /* ignore */
       }
@@ -186,7 +234,7 @@ export function OnboardingTour() {
     setStep((s) => Math.max(0, s - 1));
   }
 
-  if (!mounted || !showTour || !current) return null;
+  if (!mounted || !storageHydrated || !showTour || !current) return null;
 
   const isLast = step >= currentRouteSteps.length - 1;
 

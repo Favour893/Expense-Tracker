@@ -54,6 +54,7 @@ export function ReportPreview({
   narrativeText: string;
 }) {
   const incomeTotal = report?.totals?.incomeTotal ?? 0;
+  const startingIncome = report?.totals?.startingIncome ?? 0;
   const expensesTotal = report?.totals?.expensesTotal ?? 0;
   const net = report?.totals?.net ?? 0;
   const pieRows = report?.breakdown?.filter((row) => Number(row.amount || 0) > 0) ?? [];
@@ -93,6 +94,11 @@ export function ReportPreview({
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-white/10 dark:bg-white/5 sm:rounded-xl sm:p-2">
           <div className="text-[0.65rem] font-medium leading-tight text-slate-600 dark:text-slate-300 sm:text-xs">Income</div>
           <div className="mt-0.5 break-words text-[0.68rem] font-bold leading-tight sm:mt-0.5 sm:text-lg">{formatMoney(incomeTotal)}</div>
+          {Math.abs(startingIncome) > 1e-9 ? (
+            <div className="mt-0.5 text-[0.58rem] leading-snug text-slate-500 dark:text-slate-400 sm:text-[0.65rem]">
+              Includes {formatMoney(startingIncome)} from previous month&apos;s net
+            </div>
+          ) : null}
         </div>
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-white/10 dark:bg-white/5 sm:rounded-xl sm:p-2">
           <div className="text-[0.65rem] font-medium leading-tight text-slate-600 dark:text-slate-300 sm:text-xs">Expenses</div>
